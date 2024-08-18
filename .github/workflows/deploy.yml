@@ -37,12 +37,12 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build --cache-from ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache --tag ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} .
+          docker build --cache-from ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache --tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} .
 
       - name: Push Docker Cache
         run: |
-          docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache
+          docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/duke:cache
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/duke:cache
 
   deploy:
     runs-on: ubuntu-latest
@@ -54,15 +54,15 @@ jobs:
 
       - name: Push Docker Image
         run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
-          docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+          docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/duke:cache
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/duke:cache
 
       - name: Deploy to DigitalOcean Droplet
         run: |
           ssh -o StrictHostKeyChecking=no root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << EOF
-          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
           docker stop app || true
           docker rm app || true
-          docker run -d -p 8080:8080 --name app ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
+          docker run -d -p 8080:8080 --name app ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
           EOF
