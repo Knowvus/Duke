@@ -18,7 +18,7 @@ RUN cargo build --release
 FROM debian:buster-slim
 
 # Copy the compiled binary from the builder stage
-COPY --from=builder /usr/src/app/target/release/app /usr/local/bin/app
+COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/app
 
 # Set the entry point for the container
 ENTRYPOINT ["/usr/local/bin/app"]
