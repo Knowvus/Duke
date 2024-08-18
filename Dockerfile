@@ -17,17 +17,20 @@ RUN cargo build --release && rm -rf src
 COPY src ./src
 RUN cargo build --release
 
-# Use a more recent base image for the final build
+# Output the contents of the build directory to verify the binary is there
+RUN ls -lh target/release/
+
+# Use a smaller base image for the final build
 FROM debian:bullseye-slim
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/app
+
+# Output the contents of the /usr/local/bin/ directory to verify the binary is there
+RUN ls -lh /usr/local/bin/
 
 # Set the entry point for the container
 ENTRYPOINT ["/usr/local/bin/app"]
 
 # Expose the port that your app runs on
 EXPOSE 8080
-
-# Set the default command for the container
-CMD ["app"]
