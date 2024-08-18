@@ -1,5 +1,5 @@
 # Use an official Rust image as the build stage
-FROM rust:1.64 as builder
+FROM rust:1.70 as builder
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
