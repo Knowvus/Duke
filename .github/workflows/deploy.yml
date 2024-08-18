@@ -28,7 +28,14 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Login to Infisical
+      - name: Install Infisical CLI
+        run: |
+          curl -L -o infisical https://github.com/infisical/infisical/releases/latest/download/infisical-linux-amd64
+          chmod +x infisical
+          sudo mv infisical /usr/local/bin/infisical
+          infisical --version
+
+      - name: Login to Infisical using Universal Auth
         id: infisical-login
         run: |
           INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_CLIENT_ID --client-secret=$INFISICAL_CLIENT_SECRET --plain --silent)
@@ -36,7 +43,7 @@ jobs:
 
       - name: Fetch Secrets from Infisical
         run: |
-          infisical run --env=prod --recursive --projectId=$INFISICAL_PROJECT_ID -- bash -c 'export DOCKER_HUB_USERNAME=${DOCKER_HUB_USERNAME}; export DOCKER_HUB_PASSWORD=${DOCKER_HUB_PASSWORD}; export DIGITALOCEAN_SSH_KEY=${DIGITALOCEAN_SSH_KEY}; export DIGITALOCEAN_DROPLET_IP=${DIGITALOCEAN_DROPLET_IP};'
+          infisical run --env=prod --recursive --projectId=$INFISICAL_PROJECT_ID -- bash -c 'export DOCKER_HUB_USERNAME=${DOCKER_HUB_USERNAME}; export DOCKER_HUB_PASSWORD=${DOCKER_HUB_PASSWORD}; export DIGITALOCEAN_SSH_KEY=${DOCKER_HUB_SSH_KEY}; export DIGITALOCEAN_DROPLET_IP=${DIGITALOCEAN_DROPLET_IP};'
 
       - name: Build Docker Image
         run: docker build -t my-app:${{ github.sha }} .
@@ -59,4 +66,3 @@ jobs:
       - name: Verify Deployment
         run: |
           curl -X POST -H "Content-Type: application/json" -d '{"input_string": "test"}' http://${DIGITALOCEAN_DROPLET_IP}:3030/reverse
-
