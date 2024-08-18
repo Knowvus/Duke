@@ -6,7 +6,7 @@ use handlers::{create_task, create_routes};
 
 #[tokio::main]
 async fn main() {
-    println!("Application is starting...");
+    println!("Starting the application...");
 
     let create_task_route = warp::path("create_task")
         .and_then(create_task);
@@ -21,4 +21,6 @@ async fn main() {
     warp::serve(routes)
         .run(addr)
         .await;
+
+    println!("Server has exited."); // This should not normally be reached unless the server stops
 }
