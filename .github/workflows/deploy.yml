@@ -22,7 +22,6 @@ jobs:
       - name: Install Infisical CLI
         run: |
           curl -L -o infisical https://github.com/infisical/infisical/releases/download/infisical-cli/v0.28.4/infisical_0.28.4_linux_amd64.tar.gz
-          tar -xzf infisical_0.28.4_linux_amd64.tar.gz
           chmod +x infisical
           sudo mv infisical /usr/local/bin/infisical
 
@@ -36,7 +35,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t your_dockerhub_username/app:${{ github.sha }} .
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} .
         env:
           INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
         
@@ -49,7 +48,7 @@ jobs:
         
       - name: Push Docker Image
         run: |
-          docker push your_dockerhub_username/app:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
         env:
           INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}        
 
