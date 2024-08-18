@@ -54,14 +54,14 @@ jobs:
     needs: build
     steps:
       - name: Log in to Docker Hub
-      run: |
-        echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+        run: |
+          echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
       - name: Push Docker Image
-      run: |
-        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
-        docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache
-        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache
+        run: |
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
+          docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache
 
       - name: Deploy to DigitalOcean Droplet
         run: |
