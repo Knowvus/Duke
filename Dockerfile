@@ -32,5 +32,8 @@ RUN ls -lh /usr/local/bin/
 # Set the entry point for the container
 ENTRYPOINT ["/usr/local/bin/app"]
 
+# Add a sleep command to keep the container alive for debugging
+CMD ["sleep", "3600"]
+
 # Expose the port that your app runs on
 EXPOSE 8080
