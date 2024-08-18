@@ -30,7 +30,7 @@ jobs:
 
       - name: Install Infisical CLI
         run: |
-          curl -L -o infisical https://github.com/infisical/infisical/releases/latest/download/infisical-linux-amd64
+          curl -L -o infisical https://github.com/infisical/infisical/releases/download/infisical-cli%2Fv0.28.4/infisical_0.28.4_linux_amd64
           chmod +x infisical
           sudo mv infisical /usr/local/bin/infisical
           infisical --version
