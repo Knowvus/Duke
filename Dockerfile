@@ -21,3 +21,6 @@ COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/duke
 
 # Set the entry point
 ENTRYPOINT ["duke"]
+
+# Expose the port the app runs on
+EXPOSE 3030
