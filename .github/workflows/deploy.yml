@@ -40,6 +40,7 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} .
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} .
         env:
           INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
 
