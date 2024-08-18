@@ -1,20 +1,23 @@
-# Use an official Rust image as the build environment
+# Use an official Rust image as the base image
 FROM rust:1.60 as builder
 
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Copy the Cargo.toml and lock files first, and build dependencies
+# Copy the Cargo.toml and Cargo.lock files
 COPY Cargo.toml Cargo.lock ./
+
+# Copy the source code
+COPY src ./src
+
+# Build the application
 RUN cargo build --release
 
-# Copy the source code and build the application
-COPY src ./src
-RUN cargo install --path .
-
-# Use a smaller base image for the final image
+# Use a slim image as the final image
 FROM debian:buster-slim
-WORKDIR /usr/local/bin
-COPY --from=builder /usr/src/app/target/release/duke_rs .
 
-CMD ["./duke_rs"]
+# Copy the compiled binary from the builder stage
+COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/duke
+
+# Set the entry point
+ENTRYPOINT ["duke"]
