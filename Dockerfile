@@ -1,18 +1,20 @@
-# Use an official Rust runtime as a parent image
-FROM rust:latest
+# Use an official Rust image as the build environment
+FROM rust:1.60 as builder
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy the current directory contents into the container at /usr/src/myapp
-COPY . .
-
-# Build the Rust application
+# Copy the Cargo.toml and lock files first, and build dependencies
+COPY Cargo.toml Cargo.lock ./
 RUN cargo build --release
 
-# Make port 8080 available to the world outside this container
-EXPOSE 8080
+# Copy the source code and build the application
+COPY src ./src
+RUN cargo install --path .
 
-# Run the executable
-CMD ["./target/release/app"]
+# Use a smaller base image for the final image
+FROM debian:buster-slim
+WORKDIR /usr/local/bin
+COPY --from=builder /usr/src/app/target/release/duke_rs .
 
+CMD ["./duke_rs"]

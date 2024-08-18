@@ -54,9 +54,14 @@ jobs:
         env:
           INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
 
+      - name: Set up SSH
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/private_key
+          chmod 600 /tmp/private_key
+
       - name: Deploy to DigitalOcean Droplet
         run: |
-          ssh -i /path/to/private/key -o StrictHostKeyChecking=no root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << EOF
+          ssh -i /tmp/private_key -o StrictHostKeyChecking=no root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << EOF
           docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
           docker stop app || true
           docker rm app || true
@@ -64,4 +69,3 @@ jobs:
           EOF
         env:
           INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
-        
