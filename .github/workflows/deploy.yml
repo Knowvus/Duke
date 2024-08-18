@@ -30,9 +30,9 @@ jobs:
 
       - name: Install Infisical CLI
         run: |
-          curl -L -o infisical https://github.com/infisical/infisical/releases/download/infisical-cli%2Fv0.28.4/infisical_0.28.4_linux_amd64
-          chmod +x infisical
-          sudo mv infisical /usr/local/bin/infisical
+          curl -L -o infisical.deb https://github.com/infisical/infisical/releases/download/infisical-cli/v0.28.4/infisical_0.28.4_linux_amd64.deb
+          sudo dpkg -i infisical.deb
+          sudo apt-get install -f
           infisical --version
 
       - name: Login to Infisical using Universal Auth
