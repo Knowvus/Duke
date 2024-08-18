@@ -29,11 +29,8 @@ COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/app
 # Output the contents of the /usr/local/bin/ directory to verify the binary is there
 RUN ls -lh /usr/local/bin/
 
-# Set the entry point for the container
-ENTRYPOINT ["/usr/local/bin/app"]
-
-# Add a sleep command to keep the container alive for debugging
-CMD ["sleep", "3600"]
-
 # Expose the port that your app runs on
 EXPOSE 8080
+
+# Ensure the container does not exit by adding a default command
+CMD ["/usr/local/bin/app"]

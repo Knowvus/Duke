@@ -38,13 +38,13 @@ jobs:
         env:
           INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
           INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
-      
+
       # Step 5: Build Docker Image
       - name: Build Docker Image
         run: |
           docker build --tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:latest --tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} .
 
-      # Step 6 Login to Docker Hub
+      # Step 6: Login to Docker Hub
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
@@ -67,7 +67,7 @@ jobs:
         run: |
           sshpass -p "${{ secrets.DUKE_ROOT_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << EOF
           docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-          docker stop duke || true
-          docker rm duke || true
-          docker run -d -p 8080:8080 --name duke ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+          docker stop app || true
+          docker rm app || true
+          docker run -d -p 8080:8080 --name app ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
           EOF
