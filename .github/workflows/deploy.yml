@@ -53,16 +53,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DIGITALOCEAN_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.DIGITALOCEAN_DROPLET_IP }} >> ~/.ssh/known_hosts
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
 
       - name: Deploy to DigitalOcean Droplet
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << EOF
+          sshpass -p "${{ secrets.DUKE_ROOT_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << EOF
           docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
           docker stop app || true
           docker rm app || true
