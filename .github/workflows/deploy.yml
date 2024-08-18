@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for Rust App Deployment
+name: Build and Deploy Docker Image
 
 on:
   push:
@@ -7,22 +7,13 @@ on:
 
 jobs:
   build-and-deploy:
-    name: Build, Test, and Deploy
     runs-on: ubuntu-latest
 
-    env:
-      INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
-      INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
-      INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
-      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
-      DIGITALOCEAN_DROPLET_IP: ${{ secrets.DIGITALOCEAN_DROPLET_IP }}
-
     steps:
-      - name: Checkout Source Code
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set Up Rust Environment
+      - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -30,39 +21,45 @@ jobs:
 
       - name: Install Infisical CLI
         run: |
-          curl -L -o infisical.deb https://github.com/infisical/infisical/releases/download/infisical-cli/v0.28.4/infisical_0.28.4_linux_amd64.deb
-          sudo dpkg -i infisical.deb
-          sudo apt-get install -f
-          infisical --version
+          curl -L -o infisical https://github.com/infisical/infisical/releases/download/infisical-cli/v0.28.4/infisical_0.28.4_linux_amd64.tar.gz
+          tar -xzf infisical_0.28.4_linux_amd64.tar.gz
+          chmod +x infisical
+          sudo mv infisical /usr/local/bin/infisical
 
-      - name: Login to Infisical using Universal Auth
-        id: infisical-login
+      - name: Login to Infisical
         run: |
           INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_CLIENT_ID --client-secret=$INFISICAL_CLIENT_SECRET --plain --silent)
           echo "INFISICAL_TOKEN=${INFISICAL_TOKEN}" >> $GITHUB_ENV
-
-      - name: Fetch Secrets from Infisical
-        run: |
-          infisical run --env=prod --recursive --projectId=$INFISICAL_PROJECT_ID -- bash -c 'export DOCKER_HUB_USERNAME=${DOCKER_HUB_USERNAME}; export DOCKER_HUB_PASSWORD=${DOCKER_HUB_PASSWORD}; export DIGITALOCEAN_SSH_KEY=${DOCKER_HUB_SSH_KEY}; export DIGITALOCEAN_DROPLET_IP=${DIGITALOCEAN_DROPLET_IP};'
+        env:
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
 
       - name: Build Docker Image
-        run: docker build -t app:${{ github.sha }} .
+        run: |
+          docker build -t app:${{ github.sha }} .
+        env:
+          INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
 
       - name: Log in to Docker Hub
-        run: echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+        run: |
+          echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-      - name: Push Docker Image to Docker Hub
-        run: docker push app:${{ github.sha }}
+      - name: Push Docker Image
+        run: |
+          docker push app:${{ github.sha }}
+        env:
+          INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
 
       - name: Deploy to DigitalOcean Droplet
         run: |
-          ssh root@${DIGITALOCEAN_DROPLET_IP} <<EOF
-            docker pull app:${{ github.sha }}
-            docker stop app || true
-            docker rm app || true
-            docker run -d -p 3030:3030 --name app app:${{ github.sha }}
+          ssh root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << EOF
+          docker pull app:${{ github.sha }}
+          docker stop app || true
+          docker rm app || true
+          docker run -d -p 8080:8080 --name app app:${{ github.sha }}
           EOF
-
-      - name: Verify Deployment
-        run: |
-          curl -X POST -H "Content-Type: application/json" -d '{"input_string": "test"}' http://${DIGITALOCEAN_DROPLET_IP}:3030/reverse
+        env:
+          INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
