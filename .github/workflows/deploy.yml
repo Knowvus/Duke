@@ -37,30 +37,30 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t your_dockerhub_username/app:${{ github.sha }} .
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} .
         env:
           INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
 
       - name: Log in to Docker Hub
         run: |
-          echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+          echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
         env:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Push Docker Image
         run: |
-          docker push your_dockerhub_username/app:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
         env:
           INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
 
       - name: Deploy to DigitalOcean Droplet
         run: |
           ssh root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << EOF
-          docker pull your_dockerhub_username/app:${{ github.sha }}
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
           docker stop app || true
           docker rm app || true
-          docker run -d -p 8080:8080 --name app your_dockerhub_username/app:${{ github.sha }}
+          docker run -d -p 8080:8080 --name app ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
           EOF
         env:
           INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
