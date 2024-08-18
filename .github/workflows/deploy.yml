@@ -52,15 +52,15 @@ jobs:
         run: echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
       - name: Push Docker Image to Docker Hub
-        run: docker push my-app:${{ github.sha }}
+        run: docker push app:${{ github.sha }}
 
       - name: Deploy to DigitalOcean Droplet
         run: |
           ssh root@${DIGITALOCEAN_DROPLET_IP} <<EOF
-            docker pull my-app:${{ github.sha }}
-            docker stop my-app || true
-            docker rm my-app || true
-            docker run -d -p 3030:3030 --name my-app my-app:${{ github.sha }}
+            docker pull app:${{ github.sha }}
+            docker stop app || true
+            docker rm app || true
+            docker run -d -p 3030:3030 --name app app:${{ github.sha }}
           EOF
 
       - name: Verify Deployment
