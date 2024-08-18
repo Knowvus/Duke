@@ -17,8 +17,8 @@ RUN cargo build --release && rm -rf src
 COPY src ./src
 RUN cargo build --release
 
-# Use a smaller base image for the final build
-FROM debian:buster-slim
+# Use a more recent base image for the final build
+FROM debian:bullseye-slim
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/app

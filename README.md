@@ -20,7 +20,7 @@
     ```
 # NEXT STEP
 
-1) Resolve docker eplpyment issue - after pushing to github, docker image pulls then application immediatly exits
+1) Resolve docker deployment issue - after pushing to github, docker image pulls then application immediatly exits
 ```
 docker ps -a
 docker ps

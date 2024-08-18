@@ -125,6 +125,7 @@ dependencies = [
 name = "duke"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "serde",
  "serde_json",
  "tokio",
