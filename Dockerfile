@@ -4,10 +4,13 @@ FROM rust:1.70 as builder
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Cache dependencies first by copying the Cargo.toml and Cargo.lock files
-# and running `cargo build` with an empty source directory.
+# Copy the Cargo.toml and lock files first to cache dependencies
 COPY Cargo.toml Cargo.lock ./
+
+# Create an empty main file to cache dependencies
 RUN mkdir src && echo "fn main() {}" > src/main.rs
+
+# Build only the dependencies
 RUN cargo build --release && rm -rf src
 
 # Now copy the actual source code and build it
