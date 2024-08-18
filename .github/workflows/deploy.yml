@@ -67,7 +67,7 @@ jobs:
         run: |
           sshpass -p "${{ secrets.DUKE_ROOT_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << EOF
           docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-          docker stop app || true
-          docker rm app || true
-          docker run -d -p 8080:8080 --name app ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+          docker stop duke || true
+          docker rm duke || true
+          docker run -d -p 8080:8080 --name duke ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
           EOF
