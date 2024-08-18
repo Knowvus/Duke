@@ -12,6 +12,5 @@ async fn main() {
     let routes = create_task_route;
 
     warp::serve(routes)
-        .run(([127, 0, 0, 1], 8080))
+        .run(([0.0.0.0], 8080))
         .await;
-}
