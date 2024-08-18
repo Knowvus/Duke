@@ -6,7 +6,6 @@ on:
       - main
 
 jobs:
-  # Job for building the Rust application
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -45,7 +44,6 @@ jobs:
           docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache
 
-  # Job for deploying the built image
   deploy:
     runs-on: ubuntu-latest
     needs: build
