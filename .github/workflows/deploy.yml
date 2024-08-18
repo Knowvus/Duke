@@ -31,8 +31,7 @@ jobs:
 
       - name: Login to Infisical
         run: |
-          INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_CLIENT_ID --client-secret=$INFISICAL_CLIENT_SECRET --plain --silent)
-          echo "INFISICAL_TOKEN=${INFISICAL_TOKEN}" >> $GITHUB_ENV
+          infisical login --method=universal-auth --client-id=$INFISICAL_CLIENT_ID --client-secret=$INFISICAL_CLIENT_SECRET --silent
         env:
           INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
           INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
@@ -40,8 +39,6 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build --cache-from ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache --tag ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }} .
-        env:
-          INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
 
       - name: Push Docker Cache
         run: |
@@ -71,5 +68,3 @@ jobs:
           docker rm app || true
           docker run -d -p 8080:8080 --name app ${{ secrets.DOCKER_HUB_USERNAME }}/app:${{ github.sha }}
           EOF
-        env:
-          INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
