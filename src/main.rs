@@ -6,6 +6,8 @@ use handlers::{create_task, create_routes};
 
 #[tokio::main]
 async fn main() {
+    println!("Application is starting...");
+
     let create_task_route = warp::path("create_task")
         .and_then(create_task);
 
@@ -13,8 +15,9 @@ async fn main() {
 
     use std::net::SocketAddr;
     use std::str::FromStr;
-    
+
     let addr = SocketAddr::from_str("0.0.0.0:8080").expect("Invalid address");
+    println!("Starting server on {}", addr);
     warp::serve(routes)
         .run(addr)
         .await;
