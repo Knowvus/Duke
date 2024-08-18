@@ -39,6 +39,9 @@ jobs:
           INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
           INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
 
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
       - name: Build Docker Image
         run: |
           docker build --tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:latest --tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} .
