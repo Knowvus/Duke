@@ -46,7 +46,7 @@ jobs:
           infisical run --env=prod --recursive --projectId=$INFISICAL_PROJECT_ID -- bash -c 'export DOCKER_HUB_USERNAME=${DOCKER_HUB_USERNAME}; export DOCKER_HUB_PASSWORD=${DOCKER_HUB_PASSWORD}; export DIGITALOCEAN_SSH_KEY=${DOCKER_HUB_SSH_KEY}; export DIGITALOCEAN_DROPLET_IP=${DIGITALOCEAN_DROPLET_IP};'
 
       - name: Build Docker Image
-        run: docker build -t my-app:${{ github.sha }} .
+        run: docker build -t app:${{ github.sha }} .
 
       - name: Log in to Docker Hub
         run: echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
