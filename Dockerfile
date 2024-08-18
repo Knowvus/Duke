@@ -20,9 +20,6 @@ RUN cargo build --release
 # Use a smaller base image for the final build
 FROM debian:bullseye-slim
 
-# Set the working directory in the container
-WORKDIR /app
-
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/target/release/duke /usr/local/bin/duke
 
