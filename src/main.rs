@@ -1,20 +1,15 @@
 use warp::Filter;
-use warp::http::StatusCode;
-use warp::Reply;
+use std::net::SocketAddr;
+use std::str::FromStr;
+
 mod handlers;
-use handlers::{create_task, create_routes};
+use handlers::{create_routes};
 
 #[tokio::main]
 async fn main() {
     println!("Starting the application...");
 
-    let create_task_route = warp::path("create_task")
-        .and_then(create_task);
-
-    let routes = create_task_route;
-
-    use std::net::SocketAddr;
-    use std::str::FromStr;
+    let routes = create_routes();
 
     let addr = SocketAddr::from_str("0.0.0.0:8080").expect("Invalid address");
     println!("Starting server on {}", addr);
