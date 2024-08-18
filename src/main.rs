@@ -11,6 +11,11 @@ async fn main() {
 
     let routes = create_task_route;
 
+    use std::net::SocketAddr;
+    use std::str::FromStr;
+    
+    let addr = SocketAddr::from_str("0.0.0.0:8080").expect("Invalid address");
     warp::serve(routes)
-        .run(([0.0.0.0], 8080))
+        .run(addr)
         .await;
+}
