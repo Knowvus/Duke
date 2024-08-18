@@ -17,6 +17,4 @@
 
     staging
     dev
-
-    https://app.infisical.com/project/9a27fb65-7cd3-4f0e-bf41-d94bb0612488/settings
     ```
