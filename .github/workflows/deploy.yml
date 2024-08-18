@@ -39,10 +39,10 @@ jobs:
         run: |
           docker build --cache-from ${{ secrets.DOCKER_HUB_USERNAME }}/duke:cache --tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} .
 
-      - name: Push Docker Cache
-        run: |
-          docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/duke:cache
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/duke:cache
+      # - name: Push Docker Cache
+      #   run: |
+      #     docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} ${{ secrets.DOCKER_HUB_USERNAME }}/duke:cache
+      #     docker push ${{ secrets.DOCKER_HUB_USERNAME }}/duke:cache
 
   deploy:
     runs-on: ubuntu-latest
