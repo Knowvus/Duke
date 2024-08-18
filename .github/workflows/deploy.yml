@@ -37,7 +37,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build --cache-from ${{ secrets.DOCKER_HUB_USERNAME }}/app:cache --tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} .
+          docker build --cache-from ${{ secrets.DOCKER_HUB_USERNAME }}/duke:cache --tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} .
 
       - name: Push Docker Cache
         run: |
