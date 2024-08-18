@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 
 mod handlers;
-use handlers::{create_routes};
+use handlers::create_routes;
 
 #[tokio::main]
 async fn main() {
