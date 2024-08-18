@@ -24,7 +24,7 @@ RUN ls -lh target/release/
 FROM debian:bullseye-slim
 
 # Copy the compiled binary from the builder stage
-COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/app
+COPY --from=builder /usr/src/app/target/release/app /usr/local/bin/app
 
 # Output the contents of the /usr/local/bin/ directory to verify the binary is there
 RUN ls -lh /usr/local/bin/
