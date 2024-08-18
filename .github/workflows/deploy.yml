@@ -1,0 +1,65 @@
+name: Deploy Rust App to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Infisical CLI
+        run: |
+          curl -L -o infisical_0.28.4_linux_amd64.tar.gz https://github.com/Infisical/infisical/releases/download/infisical-cli%2Fv0.28.4/infisical_0.28.4_linux_amd64.tar.gz
+          tar -xzvf infisical_0.28.4_linux_amd64.tar.gz
+          sudo mv infisical /usr/local/bin/infisical
+          chmod +x /usr/local/bin/infisical
+
+      - name: Verify Infisical Installation
+        run: infisical --version
+
+      - name: Login to Infisical using Universal Auth
+        id: infisical-login
+        run: |
+          INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=${{ secrets.INFISICAL_CLIENT_ID }} --client-secret=${{ secrets.INFISICAL_CLIENT_SECRET }} --plain --silent)
+          echo "INFISICAL_TOKEN=${INFISICAL_TOKEN}" >> $GITHUB_ENV
+
+      - name: Fetch Secrets from Infisical
+        env:
+          INFISICAL_TOKEN: ${{ env.INFISICAL_TOKEN }}
+        run: |
+          infisical run --env=prod --recursive -- bash -c 'export DOCKER_HUB_USERNAME=${DOCKER_HUB_USERNAME}; export DOCKER_HUB_PASSWORD=${DOCKER_HUB_PASSWORD}; export DIGITALOCEAN_SSH_KEY=${DOCKER_HUB_SSH_KEY}; export DIGITALOCEAN_DROPLET_IP=${DIGITALOCEAN_DROPLET_IP};'
+
+      - name: Log in to Docker Hub
+        run: echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -t your_dockerhub_username/app:${{ github.sha }} .
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push your_dockerhub_username/app:${{ github.sha }}
+
+      - name: Set up SSH for DigitalOcean
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.DIGITALOCEAN_SSH_KEY }}
+
+      - name: Deploy to DigitalOcean Droplet
+        run: |
+          ssh root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << 'EOF'
+          docker pull your_dockerhub_username/rust_app:${{ github.sha }}
+          docker stop duke || true
+          docker rm duke || true
+          docker run -d -p 3030:3030 --name duke your_dockerhub_username/rust_app:${{ github.sha }}
+          EOF
+
+      - name: Test Deployment
+        run: |
+          curl -X POST -H "Content-Type: application/json" -d '{"input_string": "hello"}' http://${{ secrets.DIGITALOCEAN_DROPLET_IP }}:3030/reverse
