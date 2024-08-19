@@ -71,10 +71,16 @@ jobs:
             # Pull the latest image
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
-            # Check if a container named 'duke' is already running, stop and remove it if so
+            # Stop and remove any existing Duke container
             if [ $(docker ps -a -q -f name=duke) ]; then
-              docker stop duke
-              docker rm duke
+              docker stop duke || true
+              docker rm duke || true
+            fi
+
+            # Ensure port 8080 is not in use
+            if lsof -i :8080; then
+              echo "Port 8080 is in use, killing process..."
+              fuser -k 8080/tcp
             fi
 
             # Run the new Duke container
