@@ -72,7 +72,7 @@ jobs:
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
             # Check if a container named 'duke' is already running, stop and remove it if so
-            if [ $(docker ps -q -f name=duke) ]; then
+            if [ $(docker ps -a -q -f name=duke) ]; then
               docker stop duke
               docker rm duke
             fi
