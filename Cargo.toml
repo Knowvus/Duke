@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-<<<<<<< HEAD
 # Swagger Integration - Component
 utoipa = "4.2.3"
 utoipa-swagger-ui = "7.1.0"
