@@ -33,6 +33,11 @@ jobs:
           command: build
           args: --release
 
+      - name: Cleanup
+        run: |
+          rm -rf target/debug/
+          cargo clean -p duke --release
+
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:
@@ -74,3 +79,10 @@ jobs:
             docker run -d -p 8080:8080 --name duke ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
             sleep 5
             docker logs duke
+
+      - name: Timing information
+        if: always()
+        run: |
+         echo "Job duration: ${{ steps.job_duration.outputs.duration }}"
+           du -sh ~/.cargo
+           du -sh target
