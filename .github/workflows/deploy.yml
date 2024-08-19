@@ -58,43 +58,38 @@ jobs:
             ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
   deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to DigitalOcean Droplet
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DIGITALOCEAN_DROPLET_IP }}
-          username: root
-          password: ${{ secrets.DUKE_ROOT_PASSWORD }}
-          script: |
-            # Pull the latest Duke Docker image
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-
-            # Stop and remove any existing Duke container
-            if [ $(docker ps -a -q -f name=duke) ]; then
+      runs-on: ubuntu-latest
+      needs: build
+      steps:
+        - name: Deploy to DigitalOcean Droplet
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.DIGITALOCEAN_DROPLET_IP }}
+            username: root
+            password: ${{ secrets.DUKE_ROOT_PASSWORD }}
+            script: |
+              docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
               docker stop duke || true
               docker rm duke || true
-            fi
-
-            # Find an open port starting from 8080
-            PORT=8080
-            while lsof -i :$PORT; do
-              PORT=$((PORT + 1))
-            done
-
-            # Run the Duke container on the open port
-            echo "Starting Duke container on port $PORT..."
-            docker run -d -p $PORT:$PORT --name duke -e RUST_BACKTRACE=full -e PORT=$PORT ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-
-            # Verify that the Duke container is running
-            sleep 5
-            if [ $(docker ps -q -f name=duke) ]; then
-              echo "Duke container is running successfully on port $PORT."
-            else
-              echo "Duke container failed to start."
-              exit 1
-            fi
-
-            # Optional: Tail the logs for verification
-            docker logs duke
+          
+              # Find an open port starting from 8080
+              PORT=8080
+              while lsof -i :$PORT; do
+                echo "Port $PORT is in use, trying the next one..."
+                PORT=$((PORT+1))
+              done
+          
+              echo "Starting Duke container on port $PORT..."
+              docker run -d -p $PORT:8080 --name duke -e RUST_BACKTRACE=full ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+          
+              # Verify that the Duke container is running
+              sleep 5
+              if [ $(docker ps -q -f name=duke) ]; then
+                echo "Duke container is running successfully on port $PORT."
+              else
+                echo "Duke container failed to start."
+                exit 1
+              fi
+          
+              # Optional: Tail the logs for verification
+              docker logs duke
