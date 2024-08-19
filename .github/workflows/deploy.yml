@@ -33,11 +33,6 @@ jobs:
           command: build
           args: --release
 
-      - name: Cleanup
-        run: |
-          rm -rf target/debug/
-          cargo clean -p duke --release
-
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:

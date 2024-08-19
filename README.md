@@ -9,16 +9,18 @@
 
 1) **Run the Server Locally:**
     ```bash
+    cargo clean
+    cargo build
     cargo run
     ```
 
-2) **Send Endpoint POST:**
-   - Access `http://localhost:8080/create_task` or `http://localhost:8080/create_user` via Postman or `curl` to test your endpoints.
+2) **Endpints:**
+    - curl http://localhost:8080/create_task -d "Reverse this String!"
+    - curl http://localhost:8080/create_user -d "mkaminski1337@gmail.com"
+    - curl -f http://localhost:8080/health
+    - curl -f http://localhost:8080/docs - Swagger
 
-3) **Access Swagger UI:**
-   - View the API documentation by navigating to `http://localhost:8080/docs` in your browser.
-
-4) **Review Secrets:**
+3) **Review Secrets:**
     ```bash
     infisical secrets --env=prod
 
