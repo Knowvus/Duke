@@ -77,11 +77,15 @@ jobs:
               docker rm duke || true
             fi
 
-            # Determine the port to use
+            # Ensure that no other service is running on the desired port (8080 or 8081)
             PORT=8080
             if lsof -i :8080; then
               echo "Port 8080 is in use, switching to port 8081..."
               PORT=8081
+              if lsof -i :8081; then
+                echo "Port 8081 is also in use, stopping all services on this port."
+                fuser -k 8081/tcp
+              fi
             fi
 
             # Run the new Duke container on the determined port

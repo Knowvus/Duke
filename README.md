@@ -8,7 +8,7 @@
 # LOCAL TESTING
 
 1) **Run the Server Locally:**
-    ```bash
+    ```
     cargo clean
     cargo build
     cargo run
@@ -37,11 +37,8 @@
     Swagger UI: http://<your-droplet-ip>:8080/docs
     ```
     
-# NEXT STEP
-
-1) **Resolve Docker Deployment Issue:**
-   - After pushing to GitHub, if the Docker image pulls but the application immediately exits, you can troubleshoot with the following commands:
-    ```bash
+6) **Docker Commands**
+     ```
     docker ps -a
     docker ps
     docker inspect [service_name]
