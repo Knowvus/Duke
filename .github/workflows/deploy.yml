@@ -78,7 +78,7 @@ jobs:
             fi
 
             # Run the new Duke container
-            docker run -d -p 8080:8080 --name duke ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+            docker run -d -p 8080:8080 --name duke -e RUST_BACKTRACE=1 ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
             # Verify that the Duke container is running
             sleep 5
