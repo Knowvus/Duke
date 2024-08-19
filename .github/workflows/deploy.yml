@@ -70,4 +70,6 @@ jobs:
           docker stop app || true
           docker rm app || true
           docker run -d -p 8080:8080 --name app ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+          sleep 5
+          docker logs app
           EOF
