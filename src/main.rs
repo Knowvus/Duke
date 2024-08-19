@@ -14,8 +14,8 @@ use routes::create_routes;
 async fn main() {
     println!("Starting the application...");
 
-    // Read the port from the environment variable or default to 8080
-    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    // Ensure the PORT environment variable is set, or exit with an error
+    let port = env::var("PORT").expect("PORT environment variable not set");
     let addr = SocketAddr::from_str(&format!("0.0.0.0:{}", port))
         .expect("Invalid address");
 
