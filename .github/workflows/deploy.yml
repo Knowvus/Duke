@@ -8,68 +8,69 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust-version: [stable]
     steps:
-      # Step 1: Checkout the code from the repository
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      # Step 2: Set up Rust using the specified version
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ matrix.rust-version }}
+          toolchain: stable
           override: true
 
-      # Step 3: Install Infisical CLI (optional, based on your setup)
-      - name: Install Infisical CLI
-        run: |
-          curl -L -o infisical_0.28.4_linux_amd64.tar.gz https://github.com/infisical/infisical/releases/download/infisical-cli/v0.28.4/infisical_0.28.4_linux_amd64.tar.gz
-          tar -xzf infisical_0.28.4_linux_amd64.tar.gz
-          chmod +x infisical
-          sudo mv infisical /usr/local/bin/infisical
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      # Step 4: Login to Infisical (optional, based on your setup)
-      - name: Login to Infisical
-        run: |
-          infisical login --method=universal-auth --client-id=$INFISICAL_CLIENT_ID --client-secret=$INFISICAL_CLIENT_SECRET --silent
-        env:
-          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
-          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+      - name: Build project
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
 
-      # Step 5: Build Docker Image
-      - name: Build Docker Image
-        run: |
-          docker build --tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:latest --tag ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }} .
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release
 
-      # Step 6: Login to Docker Hub
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-      # Step 7: Push Docker Image
-      - name: Push Docker Image
-        run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/duke:latest
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/duke:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      # Step 1: Install sshpass to handle password-based SSH
-      - name: Install sshpass
-        run: sudo apt-get install -y sshpass
-
-      # Step 2: Deploy the Docker container to DigitalOcean Droplet
       - name: Deploy to DigitalOcean Droplet
-        run: |
-          sshpass -p "${{ secrets.DUKE_ROOT_PASSWORD }}" ssh -o StrictHostKeyChecking=no root@${{ secrets.DIGITALOCEAN_DROPLET_IP }} << EOF
-          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-          docker stop duke || true
-          docker rm duke || true
-          docker run -d -p 8080:8080 --name duke ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-          sleep 5
-          docker logs duke
-          EOF
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DIGITALOCEAN_DROPLET_IP }}
+          username: root
+          password: ${{ secrets.DUKE_ROOT_PASSWORD }}
+          script: |
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+            docker stop duke || true
+            docker rm duke || true
+            docker run -d -p 8080:8080 --name duke ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+            sleep 5
+            docker logs duke
