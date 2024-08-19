@@ -1,47 +1,62 @@
+# Table of Contents
+
+- [LOCAL TESTING](#local-testing)
+- [NEXT STEP](#next-step)
+- [DIRECTORY STRUCTURE](#directory-structure)
+- [OPERATIONS](#operations)
+
 # LOCAL TESTING
 
-1) Run the Server Locally:
-    ```
+1) **Run the Server Locally:**
+    ```bash
     cargo run
     ```
 
-2) Send Endpoint POST
-   - Access `http://localhost:3030/reverse` via Postman or `curl` to test.
+2) **Send Endpoint POST:**
+   - Access `http://localhost:8080/create_task` or `http://localhost:8080/create_user` via Postman or `curl` to test your endpoints.
 
+3) **Access Swagger UI:**
+   - View the API documentation by navigating to `http://localhost:8080/docs` in your browser.
 
-3) Review Secrets
-    ```
+4) **Review Secrets:**
+    ```bash
     infisical secrets --env=prod
 
-    Other Envs:
-
+    # Other Environments:
     staging
     dev
     ```
+
 # NEXT STEP
 
-1) Resolve docker deployment issue - after pushing to github, docker image pulls then application immediatly exits
-```
-docker ps -a
-docker ps
-docker rm [image]
-ls
-ls -a
-```
+1) **Resolve Docker Deployment Issue:**
+   - After pushing to GitHub, if the Docker image pulls but the application immediately exits, you can troubleshoot with the following commands:
+    ```bash
+    docker ps -a
+    docker ps
+    docker rm [container_id]
+    ls
+    ls -a
+    ```
 
 ---
 
 # TECHNICAL RESOURCES
+
 ## DIRECTORY STRUCTURE
+
 ```
 src/
 │
 ├── main.rs              # Entry point of the application
-├── handlers/
+├── handlers/            # Directory for request handlers
 │   ├── mod.rs           # Module file for the handlers
 │   └── task.rs          # Task-related handler functions
 │   └── user.rs          # User-related handler functions
-├── routes/
+├── schemas/             # Directory for schema definitions
+│   ├── mod.rs           # Module file for the schemas
+│   └── task.rs          # Schema for TaskBody
+├── routes/              # Directory for route definitions
 │   └── mod.rs           # Module file for routes
 └── apidoc/              # Directory for OpenAPI documentation
     ├── mod.rs           # Module file for OpenAPI documentation
@@ -49,21 +64,26 @@ src/
 ```
 
 ## OPERATIONS
-```
-src/routes/:
 
-Purpose: This folder contains all the route handlers for your API endpoints.
-Example: items.rs defines the route handling logic for the /items endpoint.
-src/schemas/:
+### `src/routes/`
 
-Purpose: This folder contains all your schema definitions that are used in the OpenAPI documentation.
-Example: item.rs defines the Item struct and implements the necessary traits (ToSchema or Apiv2Schema).
-src/apidoc/:
+**Purpose:** This folder contains all the route handlers that map API endpoints to their respective request handlers.
 
-Purpose: This folder is dedicated to OpenAPI documentation-related logic.
-mod.rs: This file exposes the OpenAPI documentation logic.
-openapi.rs: This file is where you define your OpenAPI schema using utoipa or paperclip. It will pull in schemas from the schemas/ directory and routes from routes/ to build the complete OpenAPI documentation.
-src/utils/:
+**Example:** `mod.rs` defines the route handling logic and integrates the handlers for `create_task` and `create_user`.
 
-Purpose: This folder can store utility functions or modules that are shared across different parts of your application (e.g., error handling).
-```
+### `src/schemas/`
+
+**Purpose:** This folder contains schema definitions used in your application and OpenAPI documentation.
+
+**Example:** `task.rs` defines the `TaskBody` struct, which is used in the `create_task` handler and referenced in the OpenAPI documentation.
+
+### `src/apidoc/`
+
+**Purpose:** This folder is dedicated to OpenAPI documentation-related logic.
+
+- **`mod.rs:`** This file exposes the OpenAPI documentation logic.
+- **`openapi.rs:`** This file defines your OpenAPI schema using `utoipa`, pulling in schemas from the `schemas/` directory and paths from the `routes/` and `handlers/` directories to build the complete OpenAPI documentation.
+
+### `src/utils/`
+
+**Purpose:** This folder can store utility functions or modules that are shared across different parts of your application (e.g., error handling, logging, etc.).

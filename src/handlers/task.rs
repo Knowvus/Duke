@@ -1,18 +1,11 @@
 use warp::http::StatusCode;
 use warp::Reply;
 use warp::reject::Rejection;
-use utoipa::IntoParams;
-use utoipa::ToSchema;
-
-#[derive(IntoParams, ToSchema)]
-pub struct TaskBody {
-    body: String,
-}
 
 #[utoipa::path(
     post,
     path = "/create_task",
-    request_body = TaskBody,
+    request_body = crate::schemas::task::TaskBody,
     responses(
         (status = 200, description = "Task created successfully", body = String)
     )

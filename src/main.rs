@@ -1,24 +1,36 @@
 use std::net::SocketAddr;
 use std::str::FromStr;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
+use warp::Filter;
 
 mod routes;
 mod apidoc;
+mod handlers;
+mod schemas;
+
 use routes::create_routes;
-use utoipa_swagger_ui::SwaggerUi;
 use apidoc::ApiDoc;
 
 #[tokio::main]
 async fn main() {
     println!("Starting the application...");
 
-    let routes = create_routes()
-        .or(SwaggerUi::new("/docs").url("/api-doc/openapi.json", ApiDoc::openapi()));
+    // Create the warp routes for your API
+    let routes = create_routes();
 
+    // Set up the Swagger UI
+    let swagger_ui = warp::path("docs").and(warp::fs::dir("swagger-ui/"));
+
+    // Combine both services to be run concurrently
     let addr = SocketAddr::from_str("0.0.0.0:8080").expect("Invalid address");
     println!("Starting server on {}", addr);
-    warp::serve(routes)
-        .run(addr)
-        .await;
 
-    println!("Server has exited."); // This should not normally be reached unless the server stops
+    // Run the API and Swagger UI on different routes
+    tokio::join!(
+        warp::serve(routes).run(addr),
+        warp::serve(swagger_ui).run(addr)
+    );
+
+    println!("Server has exited.");
 }

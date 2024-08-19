@@ -1,14 +1,16 @@
 use utoipa::OpenApi;
-use crate::handlers::{task::create_task, user::create_user};
+use crate::schemas::task::TaskBody;
+use crate::handlers::task::create_task; // Import directly if needed
+use crate::handlers::user::create_user;
 
 #[derive(OpenApi)]
 #[openapi(
     paths(
-        create_task,
-        create_user
+        crate::handlers::task::create_task,  // Explicit path to create_task
+        crate::handlers::user::create_user   // Explicit path to create_user
     ),
     components(
-        schemas()
+        schemas(TaskBody)
     )
 )]
 pub struct ApiDoc;
