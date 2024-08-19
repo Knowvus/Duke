@@ -79,10 +79,3 @@ jobs:
             docker run -d -p 8080:8080 --name duke ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
             sleep 5
             docker logs duke
-
-      - name: Timing information
-        if: always()
-        run: |
-         echo "Job duration: ${{ steps.job_duration.outputs.duration }}"
-           du -sh ~/.cargo
-           du -sh target
