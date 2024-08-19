@@ -15,20 +15,28 @@
     ```
 
 2) **Endpints:**
+    ```
     - curl http://localhost:8080/create_task -d "Reverse this String!"
     - curl http://localhost:8080/create_user -d "mkaminski1337@gmail.com"
     - curl -f http://localhost:8080/health
-    - curl -f http://localhost:8080/docs - Swagger
-
-3) **Review Secrets:**
-    ```bash
+    - curl -f http://localhost:8080/docs
+    ```
+4) **Review Secrets:**
+    ```
     infisical secrets --env=prod
-
-    # Other Environments:
+    ```
+    Other Environments
+    ```
     staging
     dev
     ```
 
+5) **API Documentation**
+    ```
+    OpenAPI JSON: http://<your-droplet-ip>:8080/api-doc/openapi.json
+    Swagger UI: http://<your-droplet-ip>:8080/docs
+    ```
+    
 # NEXT STEP
 
 1) **Resolve Docker Deployment Issue:**
@@ -36,9 +44,12 @@
     ```bash
     docker ps -a
     docker ps
+    docker inspect [service_name]
+    docker logs [service_name]
     docker rm [container_id]
     ls
     ls -a
+    sudo lsof -i :8080
     ```
 
 ---

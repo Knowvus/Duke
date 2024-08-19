@@ -1,7 +1,5 @@
 use std::net::SocketAddr;
 use std::str::FromStr;
-use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
 use warp::Filter;
 
 mod routes;
@@ -10,7 +8,6 @@ mod handlers;
 mod schemas;
 
 use routes::create_routes;
-use apidoc::ApiDoc;
 
 #[tokio::main]
 async fn main() {

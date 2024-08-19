@@ -1,7 +1,5 @@
 use warp::http::StatusCode;
-use warp::Reply;
 use warp::reject::Rejection;
-use utoipa::path;
 
 #[utoipa::path(
     post,
