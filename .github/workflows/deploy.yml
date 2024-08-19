@@ -68,7 +68,7 @@ jobs:
           username: root
           password: ${{ secrets.DUKE_ROOT_PASSWORD }}
           script: |
-            # Pull the latest image
+            # Pull the latest Duke Docker image
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
             # Stop and remove any existing Duke container
@@ -77,20 +77,15 @@ jobs:
               docker rm duke || true
             fi
 
-            # Ensure that no other service is running on the desired port (8080 or 8081)
+            # Find an open port starting from 8080
             PORT=8080
-            if lsof -i :8080; then
-              echo "Port 8080 is in use, switching to port 8081..."
-              PORT=8081
-              if lsof -i :8081; then
-                echo "Port 8081 is also in use, stopping all services on this port."
-                fuser -k 8081/tcp
-              fi
-            fi
+            while lsof -i :$PORT; do
+              PORT=$((PORT + 1))
+            done
 
-            # Run the new Duke container on the determined port
+            # Run the Duke container on the open port
             echo "Starting Duke container on port $PORT..."
-            docker run -d -p $PORT:8080 --name duke ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+            docker run -d -p $PORT:$PORT --name duke -e RUST_BACKTRACE=full -e PORT=$PORT ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
             # Verify that the Duke container is running
             sleep 5
