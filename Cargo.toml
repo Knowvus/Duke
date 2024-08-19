@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+<<<<<<< HEAD
 # Swagger Integration - Component
-utoipa = "3.0"
-utoipa-swagger-ui = "3.0"
+utoipa = "4.2.3"
+utoipa-swagger-ui = "7.1.0"
 
 # Base Server Dependencies
 bytes = "1.7.1"

@@ -1,15 +1,18 @@
-// Removed unused import
 use std::net::SocketAddr;
 use std::str::FromStr;
 
-mod handlers;
-use handlers::create_routes;
+mod routes;
+mod apidoc;
+use routes::create_routes;
+use utoipa_swagger_ui::SwaggerUi;
+use apidoc::ApiDoc;
 
 #[tokio::main]
 async fn main() {
     println!("Starting the application...");
 
-    let routes = create_routes();
+    let routes = create_routes()
+        .or(SwaggerUi::new("/docs").url("/api-doc/openapi.json", ApiDoc::openapi()));
 
     let addr = SocketAddr::from_str("0.0.0.0:8080").expect("Invalid address");
     println!("Starting server on {}", addr);
