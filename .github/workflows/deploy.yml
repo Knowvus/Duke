@@ -68,32 +68,9 @@ jobs:
           username: root
           password: ${{ secrets.DUKE_ROOT_PASSWORD }}
           script: |
-            # Pull the latest image
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-
-            # Stop and remove any existing Duke container
-            if [ $(docker ps -a -q -f name=duke) ]; then
-              docker stop duke || true
-              docker rm duke || true
-            fi
-
-            # Ensure port 8080 is not in use
-            if lsof -i :8080; then
-              echo "Port 8080 is in use, killing process..."
-              fuser -k 8080/tcp
-            fi
-
-            # Run the new Duke container
-            docker run -d -p 8080:8080 --name duke -e RUST_BACKTRACE=1 ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-
-            # Verify that the Duke container is running
+            docker stop duke || true
+            docker rm duke || true
+            docker run -d -p 8080:8080 --name duke ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
             sleep 5
-            if [ $(docker ps -q -f name=duke) ]; then
-              echo "Duke container is running successfully."
-            else
-              echo "Duke container failed to start."
-              exit 1
-            fi
-
-            # Optional: Tail the logs for verification
             docker logs duke
