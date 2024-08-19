@@ -12,3 +12,5 @@ FROM rust:1.70 as builder
    COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/duke
    EXPOSE 8080
    CMD ["duke"]
+   HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+   CMD curl -f http://localhost:8080/health || exit 1
