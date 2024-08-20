@@ -71,25 +71,26 @@ jobs:
               docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
               docker stop duke || true
               docker rm duke || true
-          
+
               # Find an open port starting from 8080
               PORT=8080
               while lsof -i :$PORT; do
                 echo "Port $PORT is in use, trying the next one..."
                 PORT=$((PORT+1))
               done
-          
+
               echo "Starting Duke container on port $PORT..."
               docker run -d -p $PORT:8080 --name duke -e RUST_BACKTRACE=full ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-          
+
               # Verify that the Duke container is running
               sleep 5
               if [ $(docker ps -q -f name=duke) ]; then
                 echo "Duke container is running successfully on port $PORT."
+                docker logs duke
               else
-                echo "Duke container failed to start."
+                echo "Duke container failed to start. Here are the logs:"
+                docker logs duke
+                echo "Container status:"
+                docker inspect duke
                 exit 1
               fi
-          
-              # Optional: Tail the logs for verification
-              docker logs duke

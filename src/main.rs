@@ -19,12 +19,11 @@ async fn main() {
     let routes = create_routes();
     let swagger_ui = warp::path("docs").and(warp::fs::dir("swagger-ui/"));
 
+    let all_routes = routes.or(swagger_ui);
+
     println!("Starting server on {}", addr);
 
-    tokio::join!(
-        warp::serve(routes).run(addr),
-        warp::serve(swagger_ui).run(addr)
-    );
+    warp::serve(all_routes).run(addr).await;
 
     println!("Server has exited.");
 }
