@@ -13,5 +13,11 @@ pub fn create_routes() -> impl warp::Filter<Extract = impl warp::Reply, Error = 
             create_task(body)
         });
 
-    create_user_route.or(create_task_route)
+    let health_route = warp::path("health")
+        .map(|| warp::reply::with_status("OK", warp::http::StatusCode::OK));
+
+    let docs_route = warp::path("docs")
+        .and(warp::fs::dir("swagger-ui/"));
+
+    create_user_route.or(create_task_route).or(health_route).or(docs_route)
 }
