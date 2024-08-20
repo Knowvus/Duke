@@ -6,7 +6,7 @@ mod schemas;
 use routes::create_routes;
 use std::env;
 use std::net::SocketAddr;
-use tracing::{info, error};
+use tracing::info;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::fmt::SubscriberBuilder;
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
@@ -16,7 +16,7 @@ use warp::Filter;
 async fn main() {
     // Create a rolling file appender
     let file_appender = RollingFileAppender::new(Rotation::DAILY, "logs", "app.log");
-    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    let (_non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
 
     // Initialize tracing subscriber with the file appender
     let subscriber = SubscriberBuilder::default()
@@ -33,7 +33,7 @@ async fn main() {
     let routes = create_routes();
     let swagger_ui = warp::path("docs").and(warp::fs::dir("swagger-ui/"));
 
-    let all_routes = routes.or(swagger_ui);
+    let _all_routes = routes.or(swagger_ui);
 
     info!("Starting server on {}", addr);
 

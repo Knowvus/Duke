@@ -11,6 +11,10 @@
 
 # LOCAL TESTING
 
+    ```
+    Build Time: ~4 Mins
+    ```
+
 1) **Run the Server Locally:**
     ```
     cargo clean
