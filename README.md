@@ -16,8 +16,8 @@
 
 2) **Endpints:**
     ```
-    - curl http://localhost:8080/create_task -d "Reverse this String!"
     - curl http://localhost:8080/create_user -d "mkaminski1337@gmail.com"
+    - curl http://localhost:8080/create_task -d "Reverse this String!"
     - curl -f http://localhost:8080/health
     - curl -f http://localhost:8080/docs
     ```
