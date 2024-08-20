@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 # Swagger Integration - Component
-utoipa = "3.0"
-utoipa-swagger-ui = { version = "3.0", features = ["axum"] }
+utoipa = "3.0.0"
+utoipa-swagger-ui = { version = "3.0.0", features = ["axum"] }
 
 # Base Server Dependencies
 bytes = "1.7.1"
