@@ -52,7 +52,11 @@
     ls -a
     sudo lsof -i :8080
     ```
-
+7) **Swagger**
+    ```
+    curl -LO https://github.com/swagger-api/swagger-ui/archive/refs/heads/master.zip
+    unzip master.zip
+    ```
 ---
 
 # TECHNICAL RESOURCES
