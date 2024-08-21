@@ -1,6 +1,5 @@
 target/
 .git/
 .github/
-.infisical.json
 Dockerfile
 README.md
