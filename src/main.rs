@@ -1,7 +1,5 @@
 mod routes;
-mod apidoc;
 mod handlers;
-mod schemas;
 
 use routes::create_routes;
 use std::env;
