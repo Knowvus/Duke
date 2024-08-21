@@ -1,5 +1,7 @@
+use utoipa::OpenApi;
 use warp::Filter;
 use crate::handlers::{create_task, create_user};
+use crate::apidoc::openapi::ApiDoc;
 
 pub fn create_routes() -> impl warp::Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     let create_user_route = warp::path("create_user")
@@ -12,12 +14,13 @@ pub fn create_routes() -> impl warp::Filter<Extract = impl warp::Reply, Error = 
             let body = String::from_utf8(body.to_vec()).unwrap_or_default();
             create_task(body)
         });
-
+    
     let health_route = warp::path("health")
         .map(|| warp::reply::with_status("OK", warp::http::StatusCode::OK));
 
     let docs_route = warp::path("docs")
-        .and(warp::fs::dir("swagger-ui/"));
+        .and(warp::path::end())
+        .map(|| warp::reply::json(&ApiDoc::openapi()));
 
     create_user_route.or(create_task_route).or(health_route).or(docs_route)
 }

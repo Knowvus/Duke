@@ -1,6 +1,8 @@
 use warp::http::StatusCode;
 use warp::Reply;
 use warp::reject::Rejection;
+use schemas::task::TaskBody;
+use utoipa::ToSchema;
 
 #[utoipa::path(
     post,
@@ -10,6 +12,7 @@ use warp::reject::Rejection;
         (status = 200, description = "Task created successfully", body = String)
     )
 )]
+
 pub async fn create_task(body: String) -> Result<impl Reply, Rejection> {
     let reversed_string = body.chars().rev().collect::<String>();
     Ok(warp::reply::with_status(reversed_string, StatusCode::OK))
