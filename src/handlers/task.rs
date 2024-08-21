@@ -5,7 +5,7 @@ use warp::reject::Rejection;
 #[utoipa::path(
     post,
     path = "/create_task",
-    request_body = crate::schemas::task::TaskBody,
+    request_body = TaskBody,
     responses(
         (status = 200, description = "Task created successfully", body = String)
     )
