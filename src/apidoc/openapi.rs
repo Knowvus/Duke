@@ -11,4 +11,4 @@ use crate::schemas::task::TaskBody;
         schemas(TaskBody)
     )
 )]
-struct ApiDoc;
+pub struct ApiDoc;

@@ -10,7 +10,6 @@ use tracing::info;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::fmt::SubscriberBuilder;
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
-use warp::Filter;
 
 #[tokio::main]
 async fn main() {
@@ -31,9 +30,8 @@ async fn main() {
     let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().expect("Invalid address");
 
     let routes = create_routes();
-    let swagger_ui = warp::path("docs").and(warp::fs::dir("swagger-ui/"));
-
-    let _all_routes = routes.or(swagger_ui);
+    
+    warp::serve(routes).run(addr).await;
 
     info!("Starting server on {}", addr);
 
