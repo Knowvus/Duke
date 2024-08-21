@@ -1,8 +1,6 @@
 use warp::http::StatusCode;
 use warp::Reply;
 use warp::reject::Rejection;
-use schemas::task::TaskBody;
-use utoipa::ToSchema;
 
 #[utoipa::path(
     post,
