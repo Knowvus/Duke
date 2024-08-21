@@ -22,7 +22,6 @@ COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/duke
 
 # Debugging steps to verify the binary
 RUN ls -la /usr/local/bin/duke
-RUN /usr/local/bin/duke --help
 
 # Expose the port the application will run on
 EXPOSE 8080
