@@ -1,5 +1,5 @@
 # First Stage: Build the Rust application
-FROM rust:1.70 as builder
+FROM rust:1.78 as builder
 WORKDIR /usr/src/app
 
 # Copy the Cargo.toml and Cargo.lock files to build dependencies first
