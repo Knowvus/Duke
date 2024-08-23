@@ -14,10 +14,11 @@ COPY src ./src
 RUN touch src/main.rs && cargo build --release
 
 # Second Stage: Create a minimal runtime environment
-FROM ubuntu:20.04
-RUN apt-get update && apt-get install \
+FROM ubuntu:22.04
+RUN apt-get update && apt-get install -y \
+    build-essential \
     libpq-dev \
-    -y ca-certificates curl \
+    ca-certificates curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the built binary from the builder stage
