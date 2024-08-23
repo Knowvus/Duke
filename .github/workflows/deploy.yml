@@ -16,6 +16,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          profile: minimal
           override: true
 
       - name: Cache dependencies
@@ -58,39 +59,41 @@ jobs:
             ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
   deploy:
-      runs-on: ubuntu-latest
-      needs: build
-      steps:
-        - name: Deploy to DigitalOcean Droplet
-          uses: appleboy/ssh-action@master
-          with:
-            host: ${{ secrets.DIGITALOCEAN_DROPLET_IP }}
-            username: root
-            password: ${{ secrets.DUKE_ROOT_PASSWORD }}
-            script: |
-              docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-              docker stop duke || true
-              docker rm duke || true
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Install Docker
+        uses: docker/setup-buildx-action@v2
 
-              # Find an open port starting from 8080
-              PORT=8080
-              while lsof -i :$PORT; do
-                echo "Port $PORT is in use, trying the next one..."
-                PORT=$((PORT+1))
-              done
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-              echo "Starting Duke container on port $PORT..."
-              docker run -d -p $PORT:8080 --name duke -e RUST_BACKTRACE=full ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+      - name: Pull Docker Image
+        run: docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
-              # Verify that the Duke container is running
-              sleep 5
-              if [ $(docker ps -q -f name=duke) ]; then
-                echo "Duke container is running successfully on port $PORT."
-                docker logs duke
-              else
-                echo "Duke container failed to start. Here are the logs:"
-                docker logs duke
-                echo "Container status:"
-                docker inspect duke
-                exit 1
-              fi
+      - name: Stop and Remove Existing Container
+        run: |
+          docker ps -q --filter "name=duke" | grep -q . && docker stop duke && docker rm duke || echo "No existing container named 'duke' found."
+
+      - name: Run New Container with PostgreSQL Connection
+        run: |
+          PORT=8080
+          while lsof -i :$PORT; do
+            echo "Port $PORT is in use, trying the next one..."
+            PORT=$((PORT+1))
+          done
+          docker run -d -p $PORT:8080 --name duke \
+            -e RUST_BACKTRACE=full \
+            -e DATABASE_URL=postgres://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@${{ secrets.DIGITALOCEAN_KERRIGAN_DROPLET_IP }}:${{ secrets.PG_PORT }}/${{ secrets.PG_DATABASE }} \
+            --network app_network \
+            ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+
+      - name: Check if Duke Container is Running
+        run: |
+          sleep 5
+          docker ps -q --filter "name=duke" || (echo "Duke container failed to start." && docker logs duke && exit 1)
+          echo "Duke container is running successfully."
+          docker logs duke
