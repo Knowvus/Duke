@@ -5,12 +5,12 @@ use warp::Rejection;
 use crate::db::establish_connection;
 
 pub async fn create_user(email: String) -> Result<impl warp::Reply, Rejection> {
-    let mut conn = establish_connection();  // Make the connection mutable
+    println!("Received email: {}", email);  // Add this line for debugging
+    let mut conn = establish_connection();
 
-    // Raw SQL query to insert a new user
     let query = format!("INSERT INTO user_users (email) VALUES ('{}')", email);
     
-    match sql_query(query).execute(&mut conn) {  // Pass the mutable connection
+    match sql_query(query).execute(&mut conn) {
         Ok(_) => Ok(warp::reply::with_status("User created", StatusCode::CREATED)),
         Err(diesel::result::Error::DatabaseError(diesel::result::DatabaseErrorKind::UniqueViolation, _)) => {
             Ok(warp::reply::with_status("Email already exists", StatusCode::CONFLICT))
@@ -18,6 +18,7 @@ pub async fn create_user(email: String) -> Result<impl warp::Reply, Rejection> {
         Err(_) => Ok(warp::reply::with_status("Failed to create user", StatusCode::INTERNAL_SERVER_ERROR)),
     }
 }
+
 
 pub async fn create_task(task_name: String, created_by: i32) -> Result<impl warp::Reply, Rejection> {
     let mut conn = establish_connection();  // Make the connection mutable
