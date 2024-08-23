@@ -9,6 +9,16 @@
 
 [![Build and Deploy Docker Image](https://github.com/Knowvus/Duke_rs/actions/workflows/deploy.yml/badge.svg)](https://github.com/Knowvus/Duke_rs/actions/workflows/deploy.yml)
 
+# MILESTONES
+
+[] Create_User Integrate with Postgres
+   [] Error Message for Duplicate Email
+[] Create_Task Integrate with Postgres
+   [] Non Null String
+
+these endpoints should be callable via CLI [this is how we can test since it's a microservice]
+Call the endpoint on the server - server servces the DB, DB responses, server serves DB response
+
 # LOCAL TESTING
 
     ```
