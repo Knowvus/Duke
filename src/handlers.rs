@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 use diesel::sql_query;
 use warp::http::StatusCode;
-use warp::{Reply, Rejection};
+use warp::Rejection;
 use crate::db::establish_connection;
 
 pub async fn create_user(email: String) -> Result<impl warp::Reply, Rejection> {
