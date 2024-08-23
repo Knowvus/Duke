@@ -15,7 +15,10 @@ RUN touch src/main.rs && cargo build --release
 
 # Second Stage: Create a minimal runtime environment
 FROM ubuntu:20.04
-RUN apt-get update && apt-get install -y ca-certificates curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install \
+    libpq-dev \
+    -y ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the built binary from the builder stage
 COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/duke

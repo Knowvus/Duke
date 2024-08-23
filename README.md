@@ -1,3 +1,10 @@
+# SUMMARY
+
+Duke is a middleware microservice Server that facilitates communication between:
+
+- Frontend: Raynor [Website]
+- Backend: Kerrigan [Postgres]
+
 # Table of Contents
 
 - [LOCAL TESTING](#local-testing)
