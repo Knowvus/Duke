@@ -97,15 +97,6 @@ jobs:
       - name: Create Docker Network (hyperion)
         run: docker network create hyperion || echo "Network hyperion already exists."
 
-      - name: Check PostgreSQL Availability
-        run: |
-          until pg_isready -h $POSTGRES_HOST -p $PG_PORT -U $PG_USER; do
-            echo "Waiting for PostgreSQL to be available..."
-            sleep 5
-          done
-        env:
-          PGPASSWORD: ${{ env.PG_PASSWORD }}
-
       - name: Initialize Docker Swarm Manager
         run: |
           docker swarm init
@@ -123,7 +114,7 @@ jobs:
           TOKEN=$(infisical secrets get DOCKER_SWARM_MANAGER_TOKEN)
           gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "${TOKEN}"
 
-      - name: Run New Container with PostgreSQL Connection
+      - name: Run New Container
         run: |
           PORT=8080
           while lsof -i :$PORT; do
@@ -132,9 +123,6 @@ jobs:
           done
           docker run -d -p $PORT:8080 --name duke \
             -e RUST_BACKTRACE=full \
-            -e DATABASE_URL=postgres://$PG_USER:$PG_PASSWORD@$POSTGRES_HOST:$PG_PORT/$PG_DATABASE \
-            --network hyperion \
-            ${{ env.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
       - name: Check if Duke Container is Running
         run: |
