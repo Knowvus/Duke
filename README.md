@@ -5,6 +5,13 @@ Duke is a middleware microservice Server that facilitates communication between:
 - Frontend: Raynor [Website]
 - Backend: Kerrigan [Postgres]
 
+# GOAL
+
+Launch Duke DockerSwarm via CICD as Manager
+Save Token to infisical
+Sync to Github Secrets
+Kerrigan yaml to recall secret to join swarm as member
+
 # Table of Contents
 
 - [LOCAL TESTING](#local-testing)
