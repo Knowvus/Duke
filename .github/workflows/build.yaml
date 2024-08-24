@@ -123,9 +123,13 @@ jobs:
           
       - name: Sync Token to GitHub Secrets
         run: |
+          # Unset GITHUB_TOKEN to prevent conflict with gh auth
+          unset GITHUB_TOKEN
+          
+          # Fetch and authenticate with GitHub CLI using the token from Infisical
           TOKEN=$(infisical secrets get DOCKER_SWARM_MANAGER_TOKEN --token $INFISICAL_TOKEN --projectId $PROJECT_ID)
           echo "$TOKEN" | gh auth login --with-token
-          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "$TOKEN")
+          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "$TOKEN"
         
       - name: Run New Container
         run: |
