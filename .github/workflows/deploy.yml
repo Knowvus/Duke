@@ -106,9 +106,13 @@ jobs:
         run: |
           export INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_MACHINE_IDENTITY_CLIENT_ID --client-secret=$INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET --silent --plain)
 
+      - name: Verify Infisical Authentication
+        run: |
+          echo $INFISICAL_TOKEN || { echo "Infisical token not generated"; exit 1; }
+    
       - name: Save Swarm Join Token to Infisical
         run: |
-          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN --body "${{ steps.deploy.outputs.manager_token }}"
+          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN --body "${{ steps.deploy.outputs.manager_token }}" --token $INFISICAL_TOKEN
 
       - name: Sync Token to GitHub Secrets
         run: |
