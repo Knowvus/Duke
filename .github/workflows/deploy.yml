@@ -9,7 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # Define all necessary secrets at the top of the job
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
     steps:
@@ -66,15 +65,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     env:
-      # Define all necessary secrets at the top of the job
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
-      PG_USER: ${{ secrets.PG_USER }}
-      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
-      PG_DATABASE: ${{ secrets.PG_DATABASE }}
-      PG_PORT: ${{ secrets.PG_PORT }}
-      POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-      INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+      INFISICAL_MACHINE_IDENTITY_CLIENT_ID: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
+      INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MANAGER_IP: ${{ secrets.DO_DUKE_IP }}
     steps:
@@ -103,10 +97,16 @@ jobs:
           MANAGER_TOKEN=$(docker swarm join-token -q manager)
           echo "::set-output name=manager_token::${MANAGER_TOKEN}"
 
-      - name: Save Swarm Join Token to Infisical
-        if: ${{ env.INFISICAL_TOKEN }}
+      - name: Install Infisical CLI
         run: |
-          curl -s https://infisical.com/install.sh | bash
+          curl -fsSL https://infisical.com/install-cli.sh | bash
+
+      - name: Authenticate Machine Identity with Infisical
+        run: |
+          export INFISICAL_TOKEN=$(infisical machine-identity authenticate --client-id $INFISICAL_MACHINE_IDENTITY_CLIENT_ID --client-secret $INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET)
+
+      - name: Save Swarm Join Token to Infisical
+        run: |
           infisical secrets set DOCKER_SWARM_MANAGER_TOKEN --body "${{ steps.deploy.outputs.manager_token }}"
 
       - name: Sync Token to GitHub Secrets
@@ -123,6 +123,8 @@ jobs:
           done
           docker run -d -p $PORT:8080 --name duke \
             -e RUST_BACKTRACE=full \
+            --network hyperion \
+            ${{ env.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
       - name: Check if Duke Container is Running
         run: |
