@@ -71,6 +71,7 @@ jobs:
       INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MANAGER_IP: ${{ secrets.DO_DUKE_IP }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
     steps:
       - name: Install Docker
         uses: docker/setup-buildx-action@v2
@@ -86,7 +87,7 @@ jobs:
 
       - name: Stop and Remove Existing Container
         run: |
-          docker ps -q --filter "name=duke" | grep -q . && docker stop duke && docker rm duke || echo "No existing container named 'duke' found."
+          docker ps -q --filter "name=duke" | grep -q . && docker stop duke && docker rm duke
 
       - name: Create Docker Network (hyperion)
         run: docker network create hyperion || echo "Network hyperion already exists."
@@ -112,20 +113,16 @@ jobs:
     
       - name: Save Swarm Join Token to Infisical
         run: |
-          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="${{ env.MANAGER_TOKEN }}" --token $INFISICAL_TOKEN --projectId {{ $PROJECT_ID }}
+          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="${{ env.MANAGER_TOKEN }}" --token $INFISICAL_TOKEN --projectId $PROJECT_ID
           
       - name: Sync Token to GitHub Secrets
         run: |
           TOKEN=$(infisical secrets get DOCKER_SWARM_MANAGER_TOKEN)
-          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "${TOKEN} --projectId  {{ $PROJECT_ID }}"
+          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "${TOKEN} --projectId {$PROJECT_ID}"
 
       - name: Run New Container
         run: |
           PORT=8080
-          while lsof -i :$PORT; do
-            echo "Port $PORT is in use, trying the next one..."
-            PORT=$((PORT+1))
-          done
           docker run -d -p $PORT:8080 --name duke \
             -e RUST_BACKTRACE=full \
             --network hyperion \
@@ -134,7 +131,7 @@ jobs:
       - name: Check if Duke Container is Running
         run: |
           sleep 5
-          docker ps -q --filter "name=duke" || (echo "Duke container failed to start." && docker logs duke && exit 1)
-          echo "Duke container is running successfully."
+          docker ps -q --filter "name=duke" || (echo "Container failed to start." && docker logs duke && exit 1)
+          echo "Container is running successfully."
           docker logs duke
 
