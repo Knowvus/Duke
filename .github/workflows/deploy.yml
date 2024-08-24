@@ -100,10 +100,16 @@ jobs:
       - name: Install Infisical CLI
         run: |
           curl -fsSL https://infisical.com/install-cli.sh | bash
+        shell: bash
+
+      - name: Verify Infisical CLI Installation
+        run: |
+          which infisical || { echo "Infisical CLI not found in PATH"; exit 1; }
+          infisical --version
 
       - name: Authenticate Machine Identity with Infisical
         run: |
-          export INFISICAL_TOKEN=$(infisical machine-identity authenticate --client-id $INFISICAL_MACHINE_IDENTITY_CLIENT_ID --client-secret $INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET)
+          export INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_MACHINE_IDENTITY_CLIENT_ID --client-secret=$INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET --silent --plain)
 
       - name: Save Swarm Join Token to Infisical
         run: |
