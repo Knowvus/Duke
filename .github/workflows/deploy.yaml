@@ -112,12 +112,12 @@ jobs:
     
       - name: Save Swarm Join Token to Infisical
         run: |
-          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="${{ env.MANAGER_TOKEN }}" --token $INFISICAL_TOKEN --projectId 9a27fb65-7cd3-4f0e-bf41-d94bb0612488
+          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="${{ env.MANAGER_TOKEN }}" --token $INFISICAL_TOKEN --projectId {{ $PROJECT_ID }}
           
       - name: Sync Token to GitHub Secrets
         run: |
           TOKEN=$(infisical secrets get DOCKER_SWARM_MANAGER_TOKEN)
-          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "${TOKEN}"
+          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "${TOKEN} --projectId  {{ $PROJECT_ID }}"
 
       - name: Run New Container
         run: |
