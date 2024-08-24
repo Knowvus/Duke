@@ -72,7 +72,6 @@ jobs:
       DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
       INFISICAL_MACHINE_IDENTITY_CLIENT_ID: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
       INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       MANAGER_IP: ${{ secrets.DO_DUKE_IP }}
       PROJECT_ID: ${{ secrets.PROJECT_ID }}
     steps:
@@ -121,14 +120,14 @@ jobs:
         run: |
           infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="${{ env.MANAGER_TOKEN }}" --token $INFISICAL_TOKEN --projectId $PROJECT_ID
           
-      - name: Sync Token to GitHub Secrets
-        run: |
-          # Unset GITHUB_TOKEN to prevent conflict with gh auth
-          unset GITHUB_TOKEN
-          TOKEN=$(infisical secrets get DOCKER_SWARM_MANAGER_TOKEN --token $INFISICAL_TOKEN --projectId $PROJECT_ID | tr -d '\n\r')
-          echo "Retrieved TOKEN (trimmed): ${TOKEN:0:4}... (hidden for security)"
-          echo "$TOKEN" | gh auth login --with-token
-          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "$TOKEN"
+      # - name: Sync Token to GitHub Secrets
+      #   run: |
+      #     # Unset DOCKER_SWARM_MANAGER_TOKEN to prevent conflict with gh auth
+      #     unset DOCKER_SWARM_MANAGER_TOKEN
+      #     TOKEN=$(infisical secrets get DOCKER_SWARM_MANAGER_TOKEN --token $INFISICAL_TOKEN --projectId $PROJECT_ID | tr -d '\n\r')
+      #     echo "Retrieved TOKEN (trimmed): ${TOKEN:0:4}... (hidden for security)"
+      #     echo "$TOKEN" | gh auth login --with-token
+      #     gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "$TOKEN"
 
       - name: Run New Container
         run: |
