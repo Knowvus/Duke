@@ -87,7 +87,7 @@ jobs:
 
       - name: Stop and Remove Existing Container
         run: |
-          docker ps -q --filter "name=duke" | grep -q . && docker stop duke && docker rm duke
+          docker ps -q --filter "name=duke" | grep -q . && docker stop duke && docker rm duke || echo "No existing container named 'duke' found."
 
       - name: Create Docker Network (hyperion)
         run: docker network create hyperion || echo "Network hyperion already exists."
@@ -131,7 +131,7 @@ jobs:
       - name: Check if Duke Container is Running
         run: |
           sleep 5
-          docker ps -q --filter "name=duke" || (echo "Container failed to start." && docker logs duke && exit 1)
-          echo "Container is running successfully."
+          docker ps -q --filter "name=duke" || (echo "Duke container failed to start." && docker logs duke && exit 1)
+          echo "Duke container is running successfully."
           docker logs duke
 
