@@ -117,9 +117,9 @@ jobs:
           
       - name: Sync Token to GitHub Secrets
         run: |
-          TOKEN=$(infisical secrets get DOCKER_SWARM_MANAGER_TOKEN)
-          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "${TOKEN} --projectId {$PROJECT_ID}"
-
+          TOKEN=$(infisical secrets get DOCKER_SWARM_MANAGER_TOKEN --token $INFISICAL_TOKEN --projectId $PROJECT_ID)
+          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "$TOKEN"
+        
       - name: Run New Container
         run: |
           PORT=8080
