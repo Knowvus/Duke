@@ -64,7 +64,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
+    permissions:  # This should be at the 'jobs' level, not 'steps'
       contents: read
       secrets: write  # Grant write access to secrets
     env:
@@ -125,7 +125,7 @@ jobs:
         run: |
           TOKEN=$(infisical secrets get DOCKER_SWARM_MANAGER_TOKEN --token $INFISICAL_TOKEN --projectId $PROJECT_ID)
           echo "$TOKEN" | gh auth login --with-token
-          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "$TOKEN"
+          gh secret set DOCKER_SWARM_MANAGER_TOKEN --body "$TOKEN")
         
       - name: Run New Container
         run: |
