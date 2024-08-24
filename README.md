@@ -7,7 +7,6 @@ Duke is a middleware microservice Server that facilitates communication between:
 
 # GOAL
 
-Launch Duke DockerSwarm via CICD as Manager
 Save Token to infisical
 Sync to Github Secrets
 Kerrigan yaml to recall secret to join swarm as member
@@ -34,7 +33,6 @@ these endpoints should be callable via CLI [this is how we can test since it's a
 Call the endpoint on the server - server servces the DB, DB responses, server serves DB response
 
 # LOCAL TESTING
-
     ```
     Build Time: ~4 Mins
     ```
@@ -44,6 +42,11 @@ Call the endpoint on the server - server servces the DB, DB responses, server se
     cargo clean
     cargo build
     cargo run
+    ```
+
+2) **Test the YAML Locally**
+    ```
+    act -j deploy --container-architecture linux/amd64
     ```
 
 2) **Endpints:**

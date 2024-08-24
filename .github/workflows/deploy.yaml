@@ -92,10 +92,10 @@ jobs:
         run: docker network create hyperion || echo "Network hyperion already exists."
 
       - name: Initialize Docker Swarm Manager
+        id: swarm_init
         run: |
           docker swarm init
-          MANAGER_TOKEN=$(docker swarm join-token -q manager)
-          echo "::set-output name=manager_token::${MANAGER_TOKEN}"
+          echo "MANAGER_TOKEN=$(docker swarm join-token -q manager)" >> $GITHUB_ENV
 
       - name: Install Infisical CLI
         run: |
@@ -112,8 +112,8 @@ jobs:
     
       - name: Save Swarm Join Token to Infisical
         run: |
-          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN --body "${{ steps.deploy.outputs.manager_token }}" --token $INFISICAL_TOKEN
-
+          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="${{ env.MANAGER_TOKEN }}" --token $INFISICAL_TOKEN
+          
       - name: Sync Token to GitHub Secrets
         run: |
           TOKEN=$(infisical secrets get DOCKER_SWARM_MANAGER_TOKEN)
@@ -137,3 +137,4 @@ jobs:
           docker ps -q --filter "name=duke" || (echo "Duke container failed to start." && docker logs duke && exit 1)
           echo "Duke container is running successfully."
           docker logs duke
+
