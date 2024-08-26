@@ -12,7 +12,7 @@ jobs:
         with:
           docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          docker_image: ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+          docker_image: ${{ secrets.DOCKER_HUB_USERNAME }}/duke
           infisical_client_id: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
           infisical_client_secret: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
           project_id: ${{ secrets.PROJECT_ID }}
