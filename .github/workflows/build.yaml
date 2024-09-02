@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Allows manual triggering of this workflow
+  workflow_dispatch:
     inputs:
       service_name:
         description: 'Service name for the Docker image'
@@ -107,15 +107,17 @@ jobs:
 
       - name: Initialize Docker Swarm and Save Tokens
         run: |
+          echo "Leave Existing Swarm..."
+          sudo docker swarm leave --force
           echo "Initializing Docker Swarm..."
-          if docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }}; then
+          if sudo docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }}; then
             echo "Docker Swarm initialized."
           else
             echo "Docker Swarm already initialized."
           fi
 
           echo "Retrieving Docker Swarm manager join token..."
-          if docker swarm join-token -q manager; then
+          if sudo docker swarm join-token -q manager; then
             echo "Docker Swarm manager join token retrieved."
             MANAGER_TOKEN=$(docker swarm join-token -q manager)
             echo "MANAGER_TOKEN=$MANAGER_TOKEN" >> $GITHUB_OUTPUT
