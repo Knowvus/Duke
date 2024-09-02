@@ -33,7 +33,7 @@ jobs:
       - name: Build and Push Docker Image
         uses: Knowvus/.github/actions/build-and-push@main
         with:
-          service_name: ${{ github.event.inputs.service_name || 'duke' }}
+          service_name: 'duke'
           docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
@@ -66,9 +66,25 @@ jobs:
             exit 1
           fi
 
+      - name: Pull Docker Image
+        run: |
+          echo "Pulling the latest Docker image..."
+          sudo docker pull ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
+
+      - name: Stop and Remove Existing Container
+        run: |
+          echo "Stopping and removing existing Docker container..."
+          sudo docker stop ${{ env.SERVICE_NAME }} || true
+          sudo docker rm ${{ env.SERVICE_NAME }} || true
+
+      - name: Deploy Docker Container
+        run: |
+          echo "Deploying new Docker container..."
+          sudo docker run -d --name ${{ env.SERVICE_NAME }} -p 8080:8080 ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
+
       - name: Initialize Docker Swarm and Save Tokens
         run: |
-          echo "Leaving existing Swarm if any..."
+          echo "Leave Existing Swarm if any..."
           sudo docker swarm leave --force || true  # Allow script to continue if not part of a swarm
           echo "Initializing Docker Swarm..."
           sudo docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }} || echo "Docker Swarm already initialized."
@@ -94,19 +110,3 @@ jobs:
 
           echo "Saving CA fingerprint to Infisical..."
           infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
-
-      - name: Pull Docker Image
-        run: |
-          echo "Pulling the latest Docker image..."
-          sudo docker pull ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
-  
-      - name: Stop and Remove Existing Container
-        run: |
-          echo "Stopping and removing existing Docker container..."
-          sudo docker stop ${{ env.SERVICE_NAME }} || true
-          sudo docker rm ${{ env.SERVICE_NAME }} || true
-  
-      - name: Deploy Docker Container
-        run: |
-          echo "Deploying new Docker container..."
-          sudo docker run -d --name ${{ env.SERVICE_NAME }} --network hyperion -p 8080:8080 ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
