@@ -113,7 +113,6 @@ jobs:
           else
             echo "Docker Swarm already initialized."
           fi
-          echo "Docker Swarm initialized."
 
           echo "Retrieving Docker Swarm manager join token..."
           if docker swarm join-token -q manager; then
