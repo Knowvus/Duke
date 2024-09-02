@@ -33,18 +33,15 @@ jobs:
       - name: Build and Push Docker Image
         uses: Knowvus/.github/actions/build-and-push@main
         with:
-          service_name: 'duke'
+          service_name: ${{ github.event.inputs.service_name || 'duke' }}
           docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          infisical_client_id: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
-          infisical_client_secret: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
-          project_id: ${{ secrets.PROJECT_ID }}
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     env:
-      USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}    # ${{ github.event.inputs.DOCKER_USERNAME }}
+      USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       INFISICAL_MACHINE_IDENTITY_CLIENT_ID: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
       INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
       INFISICAL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
@@ -69,25 +66,9 @@ jobs:
             exit 1
           fi
 
-      - name: Pull Docker Image
-        run: |
-          echo "Pulling the latest Docker image..."
-          sudo docker pull ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
-  
-      - name: Stop and Remove Existing Container
-        run: |
-          echo "Stopping and removing existing Docker container..."
-          sudo docker stop ${{ env.SERVICE_NAME }} || true
-          sudo docker rm ${{ env.SERVICE_NAME }} || true
-  
-      - name: Deploy Docker Container
-        run: |
-          echo "Deploying new Docker container..."
-          sudo docker run -d --name ${{ env.SERVICE_NAME }} --network hyperion -p 8080:8080 ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
-
       - name: Initialize Docker Swarm and Save Tokens
         run: |
-          echo "Leave Existing Swarm if any..."
+          echo "Leaving existing Swarm if any..."
           sudo docker swarm leave --force || true  # Allow script to continue if not part of a swarm
           echo "Initializing Docker Swarm..."
           sudo docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }} || echo "Docker Swarm already initialized."
@@ -114,10 +95,18 @@ jobs:
           echo "Saving CA fingerprint to Infisical..."
           infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
 
-          echo "Creating Docker network named 'hyperion'..."
-          if sudo docker network inspect hyperion >/dev/null 2>&1; then
-            echo "Docker network 'hyperion' already exists."
-          else
-            sudo docker network create --driver overlay hyperion
-            echo "Docker network 'hyperion' created."
-          fi
+      - name: Pull Docker Image
+        run: |
+          echo "Pulling the latest Docker image..."
+          sudo docker pull ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
+  
+      - name: Stop and Remove Existing Container
+        run: |
+          echo "Stopping and removing existing Docker container..."
+          sudo docker stop ${{ env.SERVICE_NAME }} || true
+          sudo docker rm ${{ env.SERVICE_NAME }} || true
+  
+      - name: Deploy Docker Container
+        run: |
+          echo "Deploying new Docker container..."
+          sudo docker run -d --name ${{ env.SERVICE_NAME }} --network hyperion -p 8080:8080 ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
