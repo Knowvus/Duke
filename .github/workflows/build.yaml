@@ -89,6 +89,7 @@ jobs:
       INFISICAL_MACHINE_IDENTITY_CLIENT_ID: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
       INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
       INFISICAL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      SERVICE_NAME: ${{ github.event.inputs.service_name || 'duke' }}
 
     steps:
       - name: Install Infisical CLI
@@ -108,6 +109,22 @@ jobs:
             echo "Infisical login failed. Exiting..."
             exit 1
           fi
+
+      - name: Pull Docker Image
+        run: |
+          echo "Pulling the latest Docker image..."
+          sudo docker pull ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
+  
+      - name: Stop and Remove Existing Container
+        run: |
+          echo "Stopping and removing existing Docker container..."
+          sudo docker stop ${{ env.SERVICE_NAME }} || true
+          sudo docker rm ${{ env.SERVICE_NAME }} || true
+  
+      - name: Deploy Docker Container
+        run: |
+          echo "Deploying new Docker container..."
+          sudo docker run -d --name ${{ env.SERVICE_NAME }} --network hyperion -p 8080:8080 ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
 
       - name: Initialize Docker Swarm and Save Tokens
         run: |
