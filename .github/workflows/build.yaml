@@ -86,6 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     env:
+      USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}    # ${{ github.event.inputs.DOCKER_USERNAME }}
       INFISICAL_MACHINE_IDENTITY_CLIENT_ID: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
       INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
       INFISICAL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
