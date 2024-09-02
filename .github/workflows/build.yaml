@@ -76,15 +76,15 @@ jobs:
             fi
             echo "INFISICAL_TOKEN=$INFISICAL_TOKEN" >> /root/setup.env
 
-            echo "Pulling the latest Docker image..."
-            sudo docker pull "$DOCKER_HUB_USERNAME/$SERVICE_NAME:latest"
-
             echo "Stopping and removing existing Docker container..."
             sudo docker stop "$SERVICE_NAME" || true
             sudo docker rm "$SERVICE_NAME" || true
 
+            echo "Pulling the latest Docker image..."
+            sudo docker pull "$DOCKER_HUB_USERNAME/$SERVICE_NAME:latest"
+
             echo "Deploying new Docker container..."
-            sudo docker run -d --name "$SERVICE_NAME" --network bridge -p 8080:8080 "$DOCKER_HUB_USERNAME/$SERVICE_NAME:latest"
+            sudo docker run --pull always -d --name "$SERVICE_NAME" --network bridge -p 8080:8080 "$DOCKER_HUB_USERNAME/$SERVICE_NAME:latest"
 
             echo "Leaving existing Docker Swarm if any..."
             sudo docker swarm leave --force || true
