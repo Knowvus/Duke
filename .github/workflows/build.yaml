@@ -58,47 +58,59 @@ jobs:
             ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
   deploy:
-      runs-on: ubuntu-latest
-      needs: build
-      steps:
-        - name: Deploy to DigitalOcean Droplet
-          uses: appleboy/ssh-action@master
-          with:
-            host: ${{ secrets.DO_DUKE_IP }}
-            username: root
-            password: ${{ secrets.DUKE_ROOT_PASSWORD }}
-            script: |
-              docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-              docker stop duke || true
-              docker rm duke || true
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to DigitalOcean Droplet
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_DUKE_IP }}
+          username: root
+          password: ${{ secrets.DUKE_ROOT_PASSWORD }}
+          script: |
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+            docker stop duke || true
+            docker rm duke || true
 
-              # Find an open port starting from 8080
-              PORT=8080
-              while lsof -i :$PORT; do
-                echo "Port $PORT is in use, trying the next one..."
-                PORT=$((PORT+1))
-              done
+            # Find an open port starting from 8080
+            PORT=8080
+            while lsof -i :$PORT; do
+              echo "Port $PORT is in use, trying the next one..."
+              PORT=$((PORT+1))
+            done
 
-              echo "Starting Duke container on port $PORT..."
-              docker run -d -p $PORT:8080 --name duke -e RUST_BACKTRACE=full ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+            echo "Starting Duke container on port $PORT..."
+            docker run -d -p $PORT:8080 --name duke -e RUST_BACKTRACE=full ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
 
-              # Verify that the Duke container is running
-              sleep 5
-              if [ $(docker ps -q -f name=duke) ]; then
-                echo "Duke container is running successfully on port $PORT."
-                docker logs duke
-              else
-                echo "Duke container failed to start. Here are the logs:"
-                docker logs duke
-                echo "Container status:"
-                docker inspect duke
-                exit 1
-              fi
+            # Verify that the Duke container is running
+            sleep 5
+            if [ $(docker ps -q -f name=duke) ]; then
+              echo "Duke container is running successfully on port $PORT."
+              docker logs duke
+            else
+              echo "Duke container failed to start. Here are the logs:"
+              docker logs duke
+              echo "Container status:"
+              docker inspect duke
+              exit 1
+            fi
 
-        - name: Initialize Docker Swarm
-          run: docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }}
-              MANAGER_TOKEN=$(docker swarm join-token -q manager)
-              infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token $INFISICAL_TOKEN --projectId ${{ secrets.PROJECT_ID }}
-              CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
-              infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token $INFISICAL_TOKEN --projectId ${{ secrets.PROJECT_ID }}
-              docker network inspect hyperion >/dev/null 2>&1 || docker network create --driver overlay hyperion
+      - name: Initialize Docker Swarm and Save Tokens
+        run: |
+          # Initialize Docker Swarm
+          docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }}
+
+          # Retrieve the Docker Swarm manager join token
+          MANAGER_TOKEN=$(docker swarm join-token -q manager)
+
+          # Save the manager token to Infisical
+          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token $INFISICAL_TOKEN --projectId ${{ secrets.PROJECT_ID }}
+
+          # Retrieve the Docker Swarm CA Fingerprint
+          CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
+
+          # Save the CA fingerprint to Infisical
+          infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token $INFISICAL_TOKEN --projectId ${{ secrets.PROJECT_ID }}
+
+          # Create Docker network named 'hyperion'
+          docker network inspect hyperion >/dev/null 2>&1 || docker network create --driver overlay hyperion
