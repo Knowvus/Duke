@@ -1,9 +1,27 @@
 name: Build and Deploy Docker Image
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:  # Allows manual triggering of this workflow
+    inputs:
+      service_name:
+        description: 'Service name for the Docker image'
+        required: true
+        default: 'duke'
+      docker_username:
+        description: 'Docker Hub username'
+        required: true
+      docker_password:
+        description: 'Docker Hub password'
+        required: true
+      infisical_client_id:
+        description: 'Infisical Client ID'
+        required: true
+      infisical_client_secret:
+        description: 'Infisical Client Secret'
+        required: true
+      project_id:
+        description: 'Infisical Project ID'
+        required: true
 
 jobs:
   build:
@@ -45,8 +63,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          username: ${{ github.event.inputs.docker_username }}
+          password: ${{ github.event.inputs.docker_password }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
@@ -54,46 +72,17 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/duke:latest
-            ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+            ${{ github.event.inputs.docker_username }}/${{ github.event.inputs.service_name }}:latest
+            ${{ github.event.inputs.docker_username }}/${{ github.event.inputs.service_name }}:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to DigitalOcean Droplet
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DO_DUKE_IP }}
-          username: root
-          password: ${{ secrets.DUKE_ROOT_PASSWORD }}
-          script: |
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-            docker stop duke || true
-            docker rm duke || true
-
-            # Find an open port starting from 8080
-            PORT=8080
-            while lsof -i :$PORT; do
-              echo "Port $PORT is in use, trying the next one..."
-              PORT=$((PORT+1))
-            done
-
-            echo "Starting Duke container on port $PORT..."
-            docker run -d -p $PORT:8080 --name duke -e RUST_BACKTRACE=full ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-
-            # Verify that the Duke container is running
-            sleep 5
-            if [ $(docker ps -q -f name=duke) ]; then
-              echo "Duke container is running successfully on port $PORT."
-              docker logs duke
-            else
-              echo "Duke container failed to start. Here are the logs:"
-              docker logs duke
-              echo "Container status:"
-              docker inspect duke
-              exit 1
-            fi
+      - name: Install Infisical CLI
+        run: |
+          curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
+          sudo apt-get update && sudo apt-get install -y infisical
 
       - name: Initialize Docker Swarm and Save Tokens
         run: |
@@ -101,16 +90,19 @@ jobs:
           docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }}
 
           # Retrieve the Docker Swarm manager join token
-          echo "MANAGER_TOKEN=$(docker swarm join-token -q manager)" >> $GITHUB_ENV
+          MANAGER_TOKEN=$(docker swarm join-token -q manager)
+          echo "MANAGER_TOKEN=$MANAGER_TOKEN" >> $GITHUB_ENV
 
-          # Obtain a Infisical Token
-          echo "INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }} --client-secret=${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }} --plain --silent)" >> $GITHUB_ENV
+          # Obtain an Infisical Token
+          INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }} --client-secret=${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }} --plain --silent)
+          echo "INFISICAL_TOKEN=$INFISICAL_TOKEN" >> $GITHUB_ENV
 
           # Save the manager token to Infisical
           infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token $INFISICAL_TOKEN --projectId ${{ secrets.PROJECT_ID }}
 
           # Retrieve the Docker Swarm CA Fingerprint
-          echo "CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')" >> $GITHUB_ENV
+          CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
+          echo "CA_FINGERPRINT=$CA_FINGERPRINT" >> $GITHUB_ENV
 
           # Save the CA fingerprint to Infisical
           infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token $INFISICAL_TOKEN --projectId ${{ secrets.PROJECT_ID }}
