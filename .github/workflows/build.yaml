@@ -66,17 +66,17 @@ jobs:
             exit 1
           fi
 
-      - name: Pull Docker Image
-        run: |
-          echo "Pulling the latest Docker image..."
-          sudo docker pull ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
-
       - name: Stop and Remove Existing Container
         run: |
           echo "Stopping and removing existing Docker container..."
           sudo docker stop ${{ env.SERVICE_NAME }} || true
           sudo docker rm ${{ env.SERVICE_NAME }} || true
-
+  
+      - name: Pull Docker Image
+        run: |
+          echo "Pulling the latest Docker image..."
+          sudo docker pull ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
+      
       - name: Deploy Docker Container
         run: |
           echo "Deploying new Docker container..."
