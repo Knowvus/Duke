@@ -30,8 +30,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}    # ${{ github.event.inputs.DOCKER_USERNAME }}
+      PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}    # ${{ github.event.inputs.DOCKER_PASSWORD }}
       SERVICE_NAME: ${{ github.event.inputs.service_name || 'duke' }}
     steps:
       - name: Checkout code
