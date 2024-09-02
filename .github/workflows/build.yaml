@@ -32,8 +32,7 @@ jobs:
     env:
       USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
-      SERVICE_NAME: ${{ github.event.inputs.service_name }}
-      SERVICE_NAME default: 'duke'
+      SERVICE_NAME: ${{ github.event.inputs.service_name || 'duke' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
