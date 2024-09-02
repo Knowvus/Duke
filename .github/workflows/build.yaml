@@ -99,24 +99,12 @@ jobs:
         run: |
           # Initialize Docker Swarm
           docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }}
-
-          # Retrieve the Docker Swarm manager join token
           MANAGER_TOKEN=$(docker swarm join-token -q manager)
           echo "MANAGER_TOKEN=$MANAGER_TOKEN" >> $GITHUB_ENV
-
-          # Obtain an Infisical Token
           INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=${INFISICAL_MACHINE_IDENTITY_CLIENT_ID} --client-secret=${INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET} --plain --silent)
           echo "INFISICAL_TOKEN=$INFISICAL_TOKEN" >> $GITHUB_ENV
-
-          # Save the manager token to Infisical
           infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token "$INFISICAL_TOKEN" --projectId ${INFISICAL_PROJECT_ID}
-
-          # Retrieve the Docker Swarm CA Fingerprint
           CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
           echo "CA_FINGERPRINT=$CA_FINGERPRINT" >> $GITHUB_ENV
-
-          # Save the CA fingerprint to Infisical
           infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token "$INFISICAL_TOKEN" --projectId ${INFISICAL_PROJECT_ID}
-
-          # Create Docker network named 'hyperion'
           docker network inspect hyperion >/dev/null 2>&1 || docker network create --driver overlay hyperion
