@@ -103,47 +103,45 @@ jobs:
         run: |
           echo "Logging into Infisical..."
           INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_MACHINE_IDENTITY_CLIENT_ID --client-secret=$INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET --plain --silent)
-          echo "INFISICAL_TOKEN=$INFISICAL_TOKEN" >> $GITHUB_OUTPUT
+          echo "INFISICAL_TOKEN=$INFISICAL_TOKEN" >> $GITHUB_ENV
+          if [ -z "$INFISICAL_TOKEN" ]; then
+            echo "Infisical login failed. Exiting..."
+            exit 1
+          fi
 
       - name: Initialize Docker Swarm and Save Tokens
         run: |
-          echo "Leave Existing Swarm..."
-          sudo docker swarm leave --force
+          echo "Leave Existing Swarm if any..."
+          sudo docker swarm leave --force || true  # Allow script to continue if not part of a swarm
           echo "Initializing Docker Swarm..."
-          if sudo docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }}; then
-            echo "Docker Swarm initialized."
-          else
-            echo "Docker Swarm already initialized."
-          fi
-
+          sudo docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }} || echo "Docker Swarm already initialized."
+          
           echo "Retrieving Docker Swarm manager join token..."
-          if sudo docker swarm join-token -q manager; then
-            echo "Docker Swarm manager join token retrieved."
-            MANAGER_TOKEN=$(docker swarm join-token -q manager)
-            echo "MANAGER_TOKEN=$MANAGER_TOKEN" >> $GITHUB_OUTPUT
-          else
+          MANAGER_TOKEN=$(sudo docker swarm join-token -q manager)
+          if [ -z "$MANAGER_TOKEN" ]; then
             echo "Failed to retrieve Docker Swarm manager join token."
             exit 1
           fi
-          
-          echo "Logging into Infisical again to save tokens..."
-          INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_MACHINE_IDENTITY_CLIENT_ID --client-secret=$INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET --plain --silent)
-          echo "INFISICAL_TOKEN=$INFISICAL_TOKEN" >> $GITHUB_OUTPUT
+          echo "MANAGER_TOKEN=$MANAGER_TOKEN" >> $GITHUB_ENV
 
           echo "Saving manager token to Infisical..."
           infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
 
           echo "Retrieving Docker Swarm CA Fingerprint..."
-          CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
-          echo "CA_FINGERPRINT=$CA_FINGERPRINT" >> $GITHUB_OUTPUT
+          CA_FINGERPRINT=$(sudo docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
+          if [ -z "$CA_FINGERPRINT" ]; then
+            echo "Failed to retrieve Docker Swarm CA Fingerprint."
+            exit 1
+          fi
+          echo "CA_FINGERPRINT=$CA_FINGERPRINT" >> $GITHUB_ENV
 
           echo "Saving CA fingerprint to Infisical..."
           infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
 
           echo "Creating Docker network named 'hyperion'..."
-          if docker network inspect hyperion >/dev/null 2>&1; then
+          if sudo docker network inspect hyperion >/dev/null 2>&1; then
             echo "Docker network 'hyperion' already exists."
           else
-            docker network create --driver overlay hyperion
+            sudo docker network create --driver overlay hyperion
             echo "Docker network 'hyperion' created."
           fi
