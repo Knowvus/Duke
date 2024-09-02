@@ -108,13 +108,23 @@ jobs:
       - name: Initialize Docker Swarm and Save Tokens
         run: |
           echo "Initializing Docker Swarm..."
-          docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }}
+          if docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }}; then
+            echo "Docker Swarm initialized."
+          else
+            echo "Docker Swarm already initialized."
+          fi
           echo "Docker Swarm initialized."
 
           echo "Retrieving Docker Swarm manager join token..."
-          MANAGER_TOKEN=$(docker swarm join-token -q manager)
-          echo "MANAGER_TOKEN=$MANAGER_TOKEN" >> $GITHUB_OUTPUT
-
+          if docker swarm join-token -q manager; then
+            echo "Docker Swarm manager join token retrieved."
+            MANAGER_TOKEN=$(docker swarm join-token -q manager)
+            echo "MANAGER_TOKEN=$MANAGER_TOKEN" >> $GITHUB_OUTPUT
+          else
+            echo "Failed to retrieve Docker Swarm manager join token."
+            exit 1
+          fi
+          
           echo "Logging into Infisical again to save tokens..."
           INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_MACHINE_IDENTITY_CLIENT_ID --client-secret=$INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET --plain --silent)
           echo "INFISICAL_TOKEN=$INFISICAL_TOKEN" >> $GITHUB_OUTPUT
@@ -130,5 +140,9 @@ jobs:
           infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
 
           echo "Creating Docker network named 'hyperion'..."
-          docker network inspect hyperion >/dev/null 2>&1 || docker network create --driver overlay hyperion
-          echo "Docker network 'hyperion' created."
+          if docker network inspect hyperion >/dev/null 2>&1; then
+            echo "Docker network 'hyperion' already exists."
+          else
+            docker network create --driver overlay hyperion
+            echo "Docker network 'hyperion' created."
+          fi
