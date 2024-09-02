@@ -40,78 +40,66 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    env:
-      USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      INFISICAL_MACHINE_IDENTITY_CLIENT_ID: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
-      INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
-      INFISICAL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
-      MANAGER_IP: ${{ secrets.DO_DUKE_IP }}
-      SERVICE_NAME: ${{ github.event.inputs.service_name || 'duke' }}
-
     steps:
-      - name: Install Infisical CLI
-        run: |
-          echo "Installing Infisical CLI..."
-          curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
-          sudo apt-get update && sudo apt-get install -y infisical
-          infisical --version
-          echo "Infisical CLI installed successfully."
-
-      - name: Infisical Login
-        run: |
-          echo "Logging into Infisical..."
-          INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_MACHINE_IDENTITY_CLIENT_ID --client-secret=$INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET --plain --silent)
-          echo "INFISICAL_TOKEN=$INFISICAL_TOKEN" >> $GITHUB_ENV
-          if [ -z "$INFISICAL_TOKEN" ]; then
-            echo "Infisical login failed. Exiting..."
-            exit 1
-          fi
-
-      - name: SSH into DigitalOcean Droplet and Deploy
-        uses: appleboy/ssh-action@master
+      - name: SSH into Droplet and Deploy
+        uses: appleboy/ssh-action@v0.1.3
         with:
           host: ${{ secrets.DO_DUKE_IP }}
           username: root
           password: ${{ secrets.DUKE_ROOT_PASSWORD }}
           script: |
-            echo "Stopping and removing existing Docker container..."
-            docker stop ${{ env.SERVICE_NAME }} || true
-            docker rm ${{ env.SERVICE_NAME }} || true
+            echo "Installing Infisical CLI..."
+            curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
+            sudo apt-get update && sudo apt-get install -y infisical
+            infisical --version
+            echo "Infisical CLI installed successfully."
 
-            echo "Force removing all Docker images..."
-            docker rmi -f $(docker images -q) || true
+            echo "Logging into Infisical..."
+            INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=${INFISICAL_MACHINE_IDENTITY_CLIENT_ID} --client-secret=${INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET} --plain --silent)
+            if [ -z "$INFISICAL_TOKEN" ]; then
+              echo "Infisical login failed. Exiting..."
+              exit 1
+            fi
+
+            echo "Pulling the latest Docker image..."
+            sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.inputs.service_name }}:latest
+
+            echo "Stopping and removing existing Docker container..."
+            sudo docker stop ${{ github.event.inputs.service_name }} || true
+            sudo docker rm ${{ github.event.inputs.service_name }} || true
+
+            echo "Creating Docker network 'hyperion' if it doesn't exist..."
+            if ! sudo docker network ls --filter name=hyperion --format "{{.Name}}" | grep -w hyperion; then
+              sudo docker network create --driver overlay hyperion
+            else
+              echo "Docker network 'hyperion' already exists."
+            fi
+
+            echo "Deploying new Docker container..."
+            sudo docker run -d --name ${{ github.event.inputs.service_name }} --network hyperion -p 8080:8080 ${{ secrets.DOCKER_HUB_USERNAME }}/${{ github.event.inputs.service_name }}:latest
 
             echo "Leave Existing Swarm if any..."
-            docker swarm leave --force || true
+            sudo docker swarm leave --force || true
+
             echo "Initializing Docker Swarm..."
-            docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }} || echo "Docker Swarm already initialized."
+            sudo docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }} || echo "Docker Swarm already initialized."
 
             echo "Retrieving Docker Swarm manager join token..."
-            MANAGER_TOKEN=$(docker swarm join-token -q manager)
+            MANAGER_TOKEN=$(sudo docker swarm join-token -q manager)
             if [ -z "$MANAGER_TOKEN" ]; then
               echo "Failed to retrieve Docker Swarm manager join token."
               exit 1
             fi
-            echo "MANAGER_TOKEN=$MANAGER_TOKEN"
 
             echo "Saving manager token to Infisical..."
-            infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
+            infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token "$INFISICAL_TOKEN" --projectId "${INFISICAL_PROJECT_ID}"
 
             echo "Retrieving Docker Swarm CA Fingerprint..."
-            CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
+            CA_FINGERPRINT=$(sudo docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
             if [ -z "$CA_FINGERPRINT" ]; then
               echo "Failed to retrieve Docker Swarm CA Fingerprint."
               exit 1
             fi
-            echo "CA_FINGERPRINT=$CA_FINGERPRINT"
 
             echo "Saving CA fingerprint to Infisical..."
-            infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
-
-            echo "Creating Docker network named 'hyperion'..."
-            if docker network inspect hyperion >/dev/null 2>&1; then
-              echo "Docker network 'hyperion' already exists."
-            else
-              docker network create --driver overlay hyperion
-              echo "Docker network 'hyperion' created."
-            fi
+            infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token "$INFISICAL_TOKEN" --projectId "${INFISICAL_PROJECT_ID}"
