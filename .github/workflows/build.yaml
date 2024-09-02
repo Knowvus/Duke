@@ -104,7 +104,7 @@ jobs:
           MANAGER_TOKEN=$(docker swarm join-token -q manager)
 
           # Save the manager token to Infisical
-          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token $INFISICAL_TOKEN --projectId ${{ secrets.PROJECT_ID }}
+          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token $MANAGER_TOKEN --projectId ${{ secrets.PROJECT_ID }}
 
           # Retrieve the Docker Swarm CA Fingerprint
           CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
