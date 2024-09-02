@@ -1,10 +1,7 @@
 name: Build and Deploy Docker Image
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual triggering of this workflow
     inputs:
       service_name:
         description: 'Service name for the Docker image'
@@ -29,58 +26,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}    # ${{ github.event.inputs.DOCKER_USERNAME }}
-      PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}    # ${{ github.event.inputs.DOCKER_PASSWORD }}
-      SERVICE_NAME: ${{ github.event.inputs.service_name || 'duke' }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+      - name: Build and Push Docker Image
+        uses: Knowvus/.github/actions/build-and-push/action.yaml@main
         with:
-          toolchain: stable
-          override: true
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Build project
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release
-
-      - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --release
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ env.USERNAME }}
-          password: ${{ env.PASSWORD }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
-            ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          service_name: 'duke'
+          docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          infisical_client_id: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
+          infisical_client_secret: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
+          project_id: ${{ secrets.PROJECT_ID }}
 
   deploy:
     runs-on: ubuntu-latest
