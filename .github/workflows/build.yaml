@@ -1,7 +1,10 @@
 name: Build and Deploy Docker Image
 
 on:
-  workflow_dispatch:  # Allows manual triggering of this workflow
+  push:
+    branches:
+      - main
+  workflow_dispatch:
     inputs:
       service_name:
         description: 'Service name for the Docker image'
