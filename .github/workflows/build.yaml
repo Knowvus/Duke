@@ -94,3 +94,11 @@ jobs:
                 docker inspect duke
                 exit 1
               fi
+
+        - name: Initialize Docker Swarm
+          run: docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }}
+              MANAGER_TOKEN=$(docker swarm join-token -q manager)
+              infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token $INFISICAL_TOKEN --projectId ${{ secrets.PROJECT_ID }}
+              CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
+              infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token $INFISICAL_TOKEN --projectId ${{ secrets.PROJECT_ID }}
+              docker network inspect hyperion >/dev/null 2>&1 || docker network create --driver overlay hyperion

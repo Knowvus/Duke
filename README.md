@@ -71,6 +71,7 @@ Call the endpoint on the server - server servces the DB, DB responses, server se
     ### Docker Swarm
     ```
     docker swarm join --token <SWARM_TOKEN> <MANAGER_IP>>:<PORT>
+    docker swarm init --advertise-addr <MANAGER_IP>
     ```
 
     ### gENERAL
