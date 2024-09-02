@@ -45,6 +45,7 @@ jobs:
       INFISICAL_MACHINE_IDENTITY_CLIENT_ID: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
       INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
       INFISICAL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      MANAGER_IP: ${{ secrets.DO_DUKE_IP }}
       SERVICE_NAME: ${{ github.event.inputs.service_name || 'duke' }}
 
     steps:
@@ -66,47 +67,51 @@ jobs:
             exit 1
           fi
 
-      - name: Stop and Remove Existing Container
-        run: |
-          echo "Stopping and removing existing Docker container..."
-          sudo docker stop ${{ env.SERVICE_NAME }} || true
-          sudo docker rm ${{ env.SERVICE_NAME }} || true
-  
-      - name: Pull Docker Image
-        run: |
-          echo "Pulling the latest Docker image..."
-          sudo docker pull ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
-      
-      - name: Deploy Docker Container
-        run: |
-          echo "Deploying new Docker container..."
-          sudo docker run -d --name ${{ env.SERVICE_NAME }} -p 8080:8080 ${{ env.USERNAME }}/${{ env.SERVICE_NAME }}:latest
+      - name: SSH into DigitalOcean Droplet and Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_DUKE_IP }}
+          username: root
+          password: ${{ secrets.DUKE_ROOT_PASSWORD }}
+          script: |
+            echo "Stopping and removing existing Docker container..."
+            docker stop ${{ env.SERVICE_NAME }} || true
+            docker rm ${{ env.SERVICE_NAME }} || true
 
-      - name: Initialize Docker Swarm and Save Tokens
-        run: |
-          echo "Leave Existing Swarm if any..."
-          sudo docker swarm leave --force || true  # Allow script to continue if not part of a swarm
-          echo "Initializing Docker Swarm..."
-          sudo docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }} || echo "Docker Swarm already initialized."
-          
-          echo "Retrieving Docker Swarm manager join token..."
-          MANAGER_TOKEN=$(sudo docker swarm join-token -q manager)
-          if [ -z "$MANAGER_TOKEN" ]; then
-            echo "Failed to retrieve Docker Swarm manager join token."
-            exit 1
-          fi
-          echo "MANAGER_TOKEN=$MANAGER_TOKEN" >> $GITHUB_ENV
+            echo "Force removing all Docker images..."
+            docker rmi -f $(docker images -q) || true
 
-          echo "Saving manager token to Infisical..."
-          infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
+            echo "Leave Existing Swarm if any..."
+            docker swarm leave --force || true
+            echo "Initializing Docker Swarm..."
+            docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }} || echo "Docker Swarm already initialized."
 
-          echo "Retrieving Docker Swarm CA Fingerprint..."
-          CA_FINGERPRINT=$(sudo docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
-          if [ -z "$CA_FINGERPRINT" ]; then
-            echo "Failed to retrieve Docker Swarm CA Fingerprint."
-            exit 1
-          fi
-          echo "CA_FINGERPRINT=$CA_FINGERPRINT" >> $GITHUB_ENV
+            echo "Retrieving Docker Swarm manager join token..."
+            MANAGER_TOKEN=$(docker swarm join-token -q manager)
+            if [ -z "$MANAGER_TOKEN" ]; then
+              echo "Failed to retrieve Docker Swarm manager join token."
+              exit 1
+            fi
+            echo "MANAGER_TOKEN=$MANAGER_TOKEN"
 
-          echo "Saving CA fingerprint to Infisical..."
-          infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
+            echo "Saving manager token to Infisical..."
+            infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
+
+            echo "Retrieving Docker Swarm CA Fingerprint..."
+            CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
+            if [ -z "$CA_FINGERPRINT" ]; then
+              echo "Failed to retrieve Docker Swarm CA Fingerprint."
+              exit 1
+            fi
+            echo "CA_FINGERPRINT=$CA_FINGERPRINT"
+
+            echo "Saving CA fingerprint to Infisical..."
+            infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token "$INFISICAL_TOKEN" --projectId $INFISICAL_PROJECT_ID
+
+            echo "Creating Docker network named 'hyperion'..."
+            if docker network inspect hyperion >/dev/null 2>&1; then
+              echo "Docker network 'hyperion' already exists."
+            else
+              docker network create --driver overlay hyperion
+              echo "Docker network 'hyperion' created."
+            fi
