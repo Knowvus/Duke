@@ -110,19 +110,24 @@ jobs:
             # Install Docker Compose if not installed
             if ! command -v docker-compose &> /dev/null; then
               echo "Installing Docker Compose..."
-              sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /root/deployment_directory/docker-compose
-              sudo chmod +x /root/deployment_directory/docker-compose
+              sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
             fi
             docker-compose version
-
+        
             # Navigate to the directory containing docker-compose.yaml
             cd /root/deployment_directory
-
+        
             # Initialize Docker Swarm
-            echo "Initializing Docker Swarm..."
-            docker swarm init --advertise-addr $DO_DUKE_IP || echo "Docker Swarm already initialized."
-
+            if ! docker info | grep -q 'Swarm: active'; then
+              echo "Initializing Docker Swarm..."
+              docker swarm init --advertise-addr $DO_DUKE_IP
+            else
+              echo "Docker Swarm already initialized."
+            fi
+        
             # Deploy using Docker Compose
             echo "Deploying with Docker Compose..."
-            docker-compose -f docker-compose.yaml pull
-            docker-compose -f docker-compose.yaml up -d
+            docker-compose pull
+            docker-compose up -d
+        
