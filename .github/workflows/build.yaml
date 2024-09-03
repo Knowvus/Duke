@@ -48,13 +48,13 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Check out main repository (to get docker-compose.yml)
+      - name: Check out foreign repository (to get Dockerfile and docker-compose.yml)
         uses: actions/checkout@v2
         with:
-          repository: your-org/your-main-repo
-          path: main-repo
+          repository: knowvus/.github
+          path: foreign-repo
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -86,6 +86,6 @@ jobs:
 
           # Deploy using Docker Compose
           echo "Deploying with Docker Compose..."
-          cd main-repo/deploy  # Adjust this path if docker-compose.yml is located elsewhere
+          cd foreign-repo  # Navigate to the directory where docker-compose.yml is located
           docker-compose pull
           docker-compose up -d
