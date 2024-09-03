@@ -107,6 +107,11 @@ jobs:
           username: root
           password: ${{ secrets.DUKE_ROOT_PASSWORD }}
           script: |
+            # Export environment variables
+            export INFISICAL_CLIENT_ID=${INFISICAL_CLIENT_ID}
+            export INFISICAL_SECRET=${INFISICAL_SECRET}
+            export INFISICAL_PROJECT_ID=${INFISICAL_PROJECT_ID}
+        
             # Install Docker Compose if not installed
             if ! command -v docker-compose &> /dev/null; then
               echo "Installing Docker Compose..."
@@ -126,8 +131,18 @@ jobs:
               echo "Docker Swarm already initialized."
             fi
         
+            # Verify presence of Dockerfile and docker-compose.yaml
+            if [ ! -f Dockerfile ]; then
+              echo "Dockerfile not found! Exiting."
+              exit 1
+            fi
+        
+            if [ ! -f docker-compose.yaml ]; then
+              echo "docker-compose.yaml not found! Exiting."
+              exit 1
+            fi
+        
             # Deploy using Docker Compose
             echo "Deploying with Docker Compose..."
-            docker-compose pull
-            docker-compose up -d
-        
+            docker-compose -f docker-compose.yaml pull
+            docker-compose -f docker-compose.yaml up -d
