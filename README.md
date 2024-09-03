@@ -85,8 +85,11 @@ Call the endpoint on the server - server servces the DB, DB responses, server se
     ```
     sudo nano /etc/ssh/sshd_config
     uncommment #Port=22
+    sudo mkdir -p /run/sshd
+    sudo chmod 0755 /run/sshd
+    sudo systemctl restart ssh
+    sudo systemctl status ssh
     ```
-
 ---
 
 # COMING SOON
