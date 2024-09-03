@@ -76,10 +76,6 @@ jobs:
           SERVICE_NAME: ${{ github.event.inputs.service_name || 'duke' }}
           DO_DUKE_IP: ${{ secrets.DO_DUKE_IP }}
         run: |
-          # Pull the latest Docker image
-          echo "Pulling the latest Docker image..."
-          docker pull "$DOCKER_HUB_USERNAME/$SERVICE_NAME:latest"
-
           # Initialize Docker Swarm
           echo "Initializing Docker Swarm..."
           docker swarm init --advertise-addr $DO_DUKE_IP || echo "Docker Swarm already initialized."
