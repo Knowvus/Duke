@@ -36,7 +36,7 @@ jobs:
           service_name: 'duke'
           docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          digital_ocean_token: ${{ secrets.DIGITAL_API }}
+          digital_ocean_token: ${{ secrets.DIGITAL_OCEAN_API }}
 
   deploy:
     runs-on: ubuntu-latest
