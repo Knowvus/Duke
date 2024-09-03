@@ -89,6 +89,7 @@ jobs:
           script: |
             mkdir -p /root/deployment_directory
             curl -o /root/deployment_directory/docker-compose.yaml https://raw.githubusercontent.com/Knowvus/duke/main/docker-compose.yaml
+            curl -o /root/deployment_directory/dockerfile https://raw.githubusercontent.com/Knowvus/duke/main/dockerfile
           port: 22
           timeout: 5s
           command_timeout: 15s
