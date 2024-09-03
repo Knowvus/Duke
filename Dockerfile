@@ -27,8 +27,11 @@ RUN apt-get update && apt-get install -y \
     && apt-get update && apt-get install -y infisical \
     && rm -rf /var/lib/apt/lists/*
 
+# Clean up any existing files or directories with the same name
+RUN rm -rf /usr/local/bin/duke
+
 # Copy the built binary from the builder stage
-COPY --from=builder /usr/src/app/target/release/* /usr/local/bin/
+COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/duke
 
 # Expose the port the application will run on
 EXPOSE 8080
