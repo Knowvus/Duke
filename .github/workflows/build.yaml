@@ -48,9 +48,8 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out foreign repository (to get Dockerfile and docker-compose.yml)
+      - name: Check out foreign repository (to get Dockerfile and docker-compose.yaml)
         uses: actions/checkout@v2
         with:
           repository: knowvus/.github
@@ -72,22 +71,28 @@ jobs:
 
       - name: Install Docker Compose
         run: |
-            sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            sudo chmod +x /usr/local/bin/docker-compose
-            docker-compose version
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose version
 
       - name: Deploy Application to Droplet
         env:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           SERVICE_NAME: ${{ github.event.inputs.service_name || 'duke' }}
           DO_DUKE_IP: ${{ secrets.DO_DUKE_IP }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_SECRET }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
         run: |
+          # Verify docker-compose.yml is present
+          echo "Checking for docker-compose.yaml in foreign-repo..."
+          ls -l .github/docker-compose.yaml || { echo "docker-compose.yaml not found in foreign-repo!"; exit 1; }
+
           # Initialize Docker Swarm
           echo "Initializing Docker Swarm..."
           docker swarm init --advertise-addr $DO_DUKE_IP || echo "Docker Swarm already initialized."
 
-          # Deploy using Docker Compose
+          # Deploy using Docker Compose with explicit path
           echo "Deploying with Docker Compose..."
-          cd .github
-          docker-compose pull
-          docker-compose up -d
+          docker-compose -f .github/docker-compose.yaml pull
+          docker-compose -f .github/docker-compose.yaml up -d
