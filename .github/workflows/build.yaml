@@ -104,46 +104,46 @@ jobs:
           DO_DUKE_IP: ${{ secrets.DO_DUKE_IP }}
         uses: appleboy/ssh-action@v0.1.3
         with:
-          host: ${{ secrets.DO_DUKE_IP }}
-          username: root
-          password: ${{ secrets.DUKE_ROOT_PASSWORD }}
-          script: |
-            # Export environment variables
-            export INFISICAL_CLIENT_ID=${INFISICAL_CLIENT_ID}
-            export INFISICAL_SECRET=${INFISICAL_SECRET}
-            export INFISICAL_PROJECT_ID=${INFISICAL_PROJECT_ID}
+            host: ${{ secrets.DO_DUKE_IP }}
+            username: root
+            password: ${{ secrets.DUKE_ROOT_PASSWORD }}
+            script: |
+              # Export environment variables and write them to a file for Docker Compose
+              echo "INFISICAL_CLIENT_ID=${INFISICAL_CLIENT_ID}" >> /root/deployment_directory/.env
+              echo "INFISICAL_SECRET=${INFISICAL_SECRET}" >> /root/deployment_directory/.env
+              echo "INFISICAL_PROJECT_ID=${INFISICAL_PROJECT_ID}" >> /root/deployment_directory/.env
         
-            # Install Docker Compose if not installed
-            if ! command -v docker-compose &> /dev/null; then
-              echo "Installing Docker Compose..."
-              sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-            fi
-            docker-compose version
-        
-            # Navigate to the directory containing docker-compose.yaml
-            cd /root/deployment_directory
-        
-            # Initialize Docker Swarm
-            if ! docker info | grep -q 'Swarm: active'; then
-              echo "Initializing Docker Swarm..."
-              docker swarm init --advertise-addr $DO_DUKE_IP
-            else
-              echo "Docker Swarm already initialized."
-            fi
-        
-            # Verify presence of Dockerfile and docker-compose.yaml
-            if [ ! -f Dockerfile ]; then
-              echo "Dockerfile not found! Exiting."
-              exit 1
-            fi
-        
-            if [ ! -f docker-compose.yaml ]; then
-              echo "docker-compose.yaml not found! Exiting."
-              exit 1
-            fi
-        
-            # Deploy using Docker Compose
-            echo "Deploying with Docker Compose..."
-            docker-compose -f docker-compose.yaml pull
-            docker-compose -f docker-compose.yaml up -d
+              # Install Docker Compose if not installed
+              if ! command -v docker-compose &> /dev/null; then
+                echo "Installing Docker Compose..."
+                sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                sudo chmod +x /usr/local/bin/docker-compose
+              fi
+              docker-compose version
+          
+              # Navigate to the directory containing docker-compose.yaml
+              cd /root/deployment_directory
+          
+              # Initialize Docker Swarm
+              if ! docker info | grep -q 'Swarm: active'; then
+                echo "Initializing Docker Swarm..."
+                docker swarm init --advertise-addr $DO_DUKE_IP
+              else
+                echo "Docker Swarm already initialized."
+              fi
+          
+              # Verify presence of Dockerfile and docker-compose.yaml
+              if [ ! -f Dockerfile ]; then
+                echo "Dockerfile not found! Exiting."
+                exit 1
+              fi
+          
+              if [ ! -f docker-compose.yaml ]; then
+                echo "docker-compose.yaml not found! Exiting."
+                exit 1
+              fi
+          
+              # Deploy using Docker Compose
+              echo "Deploying with Docker Compose..."
+              docker-compose --env-file .env -f docker-compose.yaml pull
+              docker-compose --env-file .env -f docker-compose.yaml up -d        
