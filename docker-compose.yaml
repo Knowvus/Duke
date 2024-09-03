@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  generic-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      INFISICAL_CLIENT_ID: "${INFISICAL_CLIENT_ID}"
+      INFISICAL_CLIENT_SECRET: "${INFISICAL_SECRET}"
+      INFISICAL_PROJECT_ID: "${INFISICAL_PROJECT_ID}"
+      SERVICE_EXECUTABLE: duke
+    ports:
+      - "8080:8080"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
