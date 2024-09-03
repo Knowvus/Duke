@@ -82,6 +82,6 @@ jobs:
 
           # Deploy using Docker Compose
           echo "Deploying with Docker Compose..."
-          cd foreign-repo  # Navigate to the directory where docker-compose.yml is located
+          cd .github
           docker-compose pull
           docker-compose up -d
