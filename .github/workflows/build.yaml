@@ -9,7 +9,7 @@ on:
       service_name:
         description: 'Service name for the Docker image'
         required: true
-        default: 'duke'
+        default: duke
       docker_username:
         description: 'Docker Hub username'
         required: true
@@ -25,6 +25,15 @@ on:
       project_id:
         description: 'Infisical Project ID'
         required: true
+      digital_ocean_token:
+        description: 'Digital Ocean token'
+        required: true
+      host:
+        description: 'Manager IP address'
+        required: true
+      password:
+        description: 'Root password'
+        required: true
 
 jobs:
   build:
@@ -36,7 +45,6 @@ jobs:
           service_name: duke
           docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          digital_ocean_token: ${{ secrets.DIGITAL_OCEAN_API }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -48,20 +56,14 @@ jobs:
           host: ${{ secrets.DO_DUKE_IP }}
           username: root
           password: ${{ secrets.DUKE_ROOT_PASSWORD }}
-          script: |
-            echo "Creating setup file with necessary environment variables..."
-            cat <<EOF > /root/setup.env
+          envs: |
+            DIGITAL_OCEAN_TOKEN=${{ secrets.DIGITAL_OCEAN_TOKEN }}
             DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
-            DOCKER_HUB_PASSWORD=${{ secrets.DOCKER_HUB_PASSWORD }}
             INFISICAL_MACHINE_IDENTITY_CLIENT_ID=${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
             INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET=${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
             INFISICAL_PROJECT_ID=${{ secrets.PROJECT_ID }}
-            SERVICE_NAME=${{ github.event.inputs.service_name }}
-            EOF
-
-            echo "Loading environment variables from setup file..."
-            source /root/setup.env
-
+            SERVICE_NAME=duke
+          script: |
             echo "Installing Infisical CLI..."
             curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
             sudo apt-get update && sudo apt-get install -y infisical
@@ -72,32 +74,26 @@ jobs:
             INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_MACHINE_IDENTITY_CLIENT_ID --client-secret=$INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET --plain --silent)
             if [ -z "$INFISICAL_TOKEN" ]; then
               echo "Infisical login failed. Exiting..."
-              rm -f /root/setup.env
               exit 1
             fi
-            echo "INFISICAL_TOKEN=$INFISICAL_TOKEN" >> /root/setup.env
+
+            echo "Pulling the latest Docker image from Docker Hub..."
+            docker pull $DOCKER_HUB_USERNAME/$SERVICE_NAME:latest
 
             echo "Stopping and removing existing Docker container..."
-            sudo docker stop "$SERVICE_NAME" || true
-            sudo docker rm "$SERVICE_NAME" || true
-
-            echo "Pulling the latest Docker image..."
-            sudo docker pull "$DOCKER_HUB_USERNAME/$SERVICE_NAME:latest"
+            docker stop $SERVICE_NAME || true
+            docker rm $SERVICE_NAME || true
 
             echo "Deploying new Docker container..."
-            sudo docker run --pull always -d --name "$SERVICE_NAME" --network bridge -p 8080:8080 "$DOCKER_HUB_USERNAME/$SERVICE_NAME:latest"
-
-            echo "Leaving existing Docker Swarm if any..."
-            sudo docker swarm leave --force || true
+            docker run -d --name $SERVICE_NAME -p 8080:8080 $DOCKER_HUB_USERNAME/$SERVICE_NAME:latest
 
             echo "Initializing Docker Swarm..."
-            sudo docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }} || echo "Docker Swarm already initialized."
+            docker swarm init --advertise-addr ${{ secrets.DO_DUKE_IP }} || echo "Docker Swarm already initialized."
 
             echo "Retrieving Docker Swarm manager join token..."
-            MANAGER_TOKEN=$(sudo docker swarm join-token -q manager)
+            MANAGER_TOKEN=$(docker swarm join-token -q manager)
             if [ -z "$MANAGER_TOKEN" ]; then
               echo "Failed to retrieve Docker Swarm manager join token."
-              rm -f /root/setup.env
               exit 1
             fi
 
@@ -105,15 +101,14 @@ jobs:
             infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --token "$INFISICAL_TOKEN" --projectId "$INFISICAL_PROJECT_ID"
 
             echo "Retrieving Docker Swarm CA Fingerprint..."
-            CA_FINGERPRINT=$(sudo docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
+            CA_FINGERPRINT=$(docker info --format '{{.Swarm.Cluster.TLSInfo.TrustRoot}}' | openssl x509 -noout -fingerprint -sha256 | sed 's/.*=//')
             if [ -z "$CA_FINGERPRINT" ]; then
               echo "Failed to retrieve Docker Swarm CA Fingerprint."
-              rm -f /root/setup.env
               exit 1
             fi
 
             echo "Saving CA fingerprint to Infisical..."
             infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --token "$INFISICAL_TOKEN" --projectId "$INFISICAL_PROJECT_ID"
 
-            echo "Cleaning up temporary setup file..."
-            rm -f /root/setup.env
+            echo "Listing DigitalOcean Droplets using doctl..."
+            doctl compute droplet list --access-token $DIGITAL_OCEAN_TOKEN
