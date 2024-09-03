@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   generic-service:
+    image: makaminski1337/duke:latest
     build:
       context: .
       dockerfile: Dockerfile
