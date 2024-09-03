@@ -90,6 +90,49 @@ Call the endpoint on the server - server servces the DB, DB responses, server se
     sudo systemctl restart ssh
     sudo systemctl status ssh
     ```
+
+    ### BASIC FIREWALL
+
+    INSTALL
+    ```
+    sudo apt update
+    sudo apt install fail2ban
+    sudo systemctl enable fail2ban
+    sudo systemctl start fail2ban
+    ```
+
+    UPDATE CONFIG: add to /etc/ssh/sshd_config
+    ```
+    Match Address 218.92.0.81
+        PermitRootLogin yes
+    ```
+    RUN CMD
+    ```
+    sudo systemctl restart ssh
+    ```
+
+    UPDATE CONFIG: add to /etc/fail2ban/jail.local on droplet:
+    ```
+    sudo ufw status
+    sudo ufw allow ssh
+    sudo ss -tuln | grep :22
+    [sshd]
+    enabled = true
+    ignoreip = 127.0.0.1/8 218.92.0.81
+    [sshd]
+    enabled = true
+    port = ssh
+    logpath = %(sshd_log)s
+    maxretry = 5
+    bantime = 10m
+    findtime = 10m
+    ```
+    RUN: CMD
+    ```
+    sudo systemctl restart fail2ban
+    sudo fail2ban-client status sshd
+    ```
+
 ---
 
 # COMING SOON
