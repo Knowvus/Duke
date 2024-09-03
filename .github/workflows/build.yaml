@@ -89,9 +89,9 @@ jobs:
           script: |
             mkdir -p /root/deployment_directory
             curl -o /root/deployment_directory/docker-compose.yaml https://raw.githubusercontent.com/Knowvus/duke/main/docker-compose.yaml
-            port: 22
-            timeout: 5s
-            command_timeout: 15s
+          port: 22
+          timeout: 5s
+          command_timeout: 15s
           
       - name: SSH and Deploy on Droplet
         uses: appleboy/ssh-action@v0.1.3
