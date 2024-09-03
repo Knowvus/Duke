@@ -71,7 +71,7 @@ jobs:
             echo "Infisical CLI installed successfully."
 
             echo "Logging into Infisical..."
-            INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id=$INFISICAL_MACHINE_IDENTITY_CLIENT_ID --client-secret=$INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET --plain --silent)
+            INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id="$INFISICAL_MACHINE_IDENTITY_CLIENT_ID" --client-secret="$INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET" --plain --silent)
             if [ -z "$INFISICAL_TOKEN" ]; then
               echo "Infisical login failed. Exiting..."
               exit 1
