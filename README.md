@@ -74,11 +74,19 @@ Call the endpoint on the server - server servces the DB, DB responses, server se
     docker swarm init --advertise-addr <MANAGER_IP>
     ```
 
-    ### gENERAL
+    ### GENERAL
+    ```
     ls
     ls -a
     sudo lsof -i :8080
     ```
+
+    ### UPDATE PORT
+    ```
+    sudo nano /etc/ssh/sshd_config
+    uncommment #Port=22
+    ```
+
 ---
 
 # COMING SOON
