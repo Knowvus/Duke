@@ -80,17 +80,19 @@ jobs:
               rm /root/deployment_directory/docker-compose.yaml
             fi
 
-      - name: Transfer Docker Compose file to Droplet
-        uses: appleboy/scp-action@v0.1.3
+      - name: Fetch Docker Compose file via curl
+        uses: appleboy/ssh-action@v0.1.3
         with:
-          source: ./docker-compose.yaml
-          target: root@${{ secrets.DO_DUKE_IP }}:/root/deployment_directory/
-          rm: true
-          port: 22
+          host: ${{ secrets.DO_DUKE_IP }}
+          username: root
           password: ${{ secrets.DUKE_ROOT_PASSWORD }}
-          timeout: 5s
-          command_timeout: 20s
-
+          script: |
+            mkdir -p /root/deployment_directory
+            curl -o /root/deployment_directory/docker-compose.yaml https://raw.githubusercontent.com/Knowvus/duke/main/docker-compose.yaml
+            port: 22
+            timeout: 5s
+            command_timeout: 15s
+          
       - name: SSH and Deploy on Droplet
         uses: appleboy/ssh-action@v0.1.3
         with:
