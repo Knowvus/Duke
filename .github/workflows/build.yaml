@@ -88,8 +88,8 @@ jobs:
           rm: true
           port: 22
           password: ${{ secrets.DUKE_ROOT_PASSWORD }}
-          timeout: 30s
-          command_timeout: 10m
+          timeout: 5s
+          command_timeout: 20s
 
       - name: SSH and Deploy on Droplet
         uses: appleboy/ssh-action@v0.1.3
