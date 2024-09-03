@@ -33,21 +33,26 @@ RUN rm -rf /usr/local/bin/duke
 # Copy the built binary from the builder stage
 COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/duke
 
+# Create manage-swarm.sh script to validate environment variables
+RUN echo '#!/bin/bash' > /usr/local/bin/manage-swarm.sh && \
+    echo 'echo "Running manage-swarm.sh script..."' >> /usr/local/bin/manage-swarm.sh && \
+    echo '[ -z "$INFISICAL_CLIENT_ID" ] && { echo "INFISICAL_CLIENT_ID is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+    echo '[ -z "$INFISICAL_CLIENT_SECRET" ] && { echo "INFISICAL_CLIENT_SECRET is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+    echo '[ -z "$INFISICAL_PROJECT_ID" ] && { echo "INFISICAL_PROJECT_ID is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+    echo 'echo "All necessary environment variables are set."' >> /usr/local/bin/manage-swarm.sh && \
+    chmod +x /usr/local/bin/manage-swarm.sh
+
 # Expose the port the application will run on
 EXPOSE 8080
 
-# Run the application with Infisical CLI to inject secrets
-CMD ["infisical", "run", "--projectId", "${INFISICAL_PROJECT_ID}", "--", "${SERVICE_EXECUTABLE}"]
+# Validate environment variables and run the application with Infisical CLI
+CMD ["bash", "-c", "/usr/local/bin/manage-swarm.sh && infisical run --projectId $INFISICAL_PROJECT_ID --client-id $INFISICAL_CLIENT_ID --client-secret $INFISICAL_CLIENT_SECRET -- $SERVICE_EXECUTABLE"]
 
 # Health check to ensure the container is healthy
 HEALTHCHECK --interval=1m --timeout=10s --start-period=1m --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
 RUN echo '#!/bin/bash' > /usr/local/bin/manage-swarm.sh && \
-  echo 'echo "Running manage-swarm.sh script..."' >> /usr/local/bin/manage-swarm.sh && \
-  echo '[ -z "$INFISICAL_CLIENT_ID" ] && { echo "INFISICAL_CLIENT_ID is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
-  echo '[ -z "$INFISICAL_CLIENT_SECRET" ] && { echo "INFISICAL_CLIENT_SECRET is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
-  echo '[ -z "$INFISICAL_PROJECT_ID" ] && { echo "INFISICAL_PROJECT_ID is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
   echo 'INFISICAL_TOKEN=$(curl -s -X POST "https://api.infisical.com/auth/login" -d "clientId=$INFISICAL_CLIENT_ID&clientSecret=$INFISICAL_CLIENT_SECRET" | jq -r .token)' >> /usr/local/bin/manage-swarm.sh && \
   echo '[ -z "$INFISICAL_TOKEN" ] && { echo "Infisical login failed"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
   echo 'MANAGER_TOKEN=$(docker swarm join-token -q manager)' >> /usr/local/bin/manage-swarm.sh && \
