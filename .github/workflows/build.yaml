@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: knowvus/.github
-          path: foreign-repo
+          path: .github
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
