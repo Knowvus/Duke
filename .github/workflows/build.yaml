@@ -90,15 +90,26 @@ jobs:
             mkdir -p /root/deployment_directory
             curl -o /root/deployment_directory/docker-compose.yaml https://raw.githubusercontent.com/Knowvus/duke/main/docker-compose.yaml
             curl -o /root/deployment_directory/Dockerfile https://raw.githubusercontent.com/Knowvus/duke/main/Dockerfile
+            # Export secrets as environment variables
+            export INFISICAL_CLIENT_ID="${INFISICAL_CLIENT_ID}"
+            export INFISICAL_CLIENT_SECRET="${INFISICAL_CLIENT_SECRET}"
+            export INFISICAL_PROJECT_ID="${INFISICAL_PROJECT_ID}"
+
+            # Navigate to the deployment directory
+            cd /root/deployment_directory
+
+            # Build and run Docker Compose with the environment variables set
+            docker-compose up -d
           port: 22
           timeout: 5s
           command_timeout: 15s
+        env:
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_SECRET }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
           
       - name: SSH and Deploy on Droplet
         env:
-          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
-          INFISICAL_SECRET: ${{ secrets.INFISICAL_SECRET }}
-          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           SERVICE_NAME: ${{ github.event.inputs.service_name || 'duke' }}
           DO_DUKE_IP: ${{ secrets.DO_DUKE_IP }}
@@ -108,11 +119,6 @@ jobs:
             username: root
             password: ${{ secrets.DUKE_ROOT_PASSWORD }}
             script: |
-              # Export environment variables and write them to a file for Docker Compose
-              echo "INFISICAL_CLIENT_ID=${INFISICAL_CLIENT_ID}" >> /root/deployment_directory/.env
-              echo "INFISICAL_SECRET=${INFISICAL_SECRET}" >> /root/deployment_directory/.env
-              echo "INFISICAL_PROJECT_ID=${INFISICAL_PROJECT_ID}" >> /root/deployment_directory/.env
-        
               # Install Docker Compose if not installed
               if ! command -v docker-compose &> /dev/null; then
                 echo "Installing Docker Compose..."

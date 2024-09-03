@@ -43,17 +43,20 @@ CMD ["infisical", "run", "--projectId", "${INFISICAL_PROJECT_ID}", "--", "${SERV
 HEALTHCHECK --interval=1m --timeout=10s --start-period=1m --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
-# Script to manage Docker Swarm tokens and CA Fingerprint
 RUN echo '#!/bin/bash' > /usr/local/bin/manage-swarm.sh && \
-    echo 'INFISICAL_TOKEN=$(infisical login --method=universal-auth --client-id="$INFISICAL_CLIENT_ID" --client-secret="$INFISICAL_CLIENT_SECRET" --plain --silent)' >> /usr/local/bin/manage-swarm.sh && \
-    echo '[ -z "$INFISICAL_TOKEN" ] && { echo "Infisical login failed"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'MANAGER_TOKEN=$(docker swarm join-token -q manager)' >> /usr/local/bin/manage-swarm.sh && \
-    echo '[ -z "$MANAGER_TOKEN" ] && { echo "Failed to retrieve Docker Swarm manager join token."; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'infisical secrets set DOCKER_SWARM_MANAGER_TOKEN="$MANAGER_TOKEN" --projectId "$INFISICAL_PROJECT_ID" --method=universal-auth --client-id="$INFISICAL_CLIENT_ID" --client-secret="$INFISICAL_CLIENT_SECRET"' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'CA_FINGERPRINT=$(docker info --format "{{.Swarm.Cluster.TLSInfo.TrustRoot}}" | openssl x509 -noout -fingerprint -sha256 | sed "s/.*=//")' >> /usr/local/bin/manage-swarm.sh && \
-    echo '[ -z "$CA_FINGERPRINT" ] && { echo "Failed to retrieve Docker Swarm CA Fingerprint."; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'infisical secrets set DOCKER_SWARM_CA_FINGERPRINT="$CA_FINGERPRINT" --projectId "$INFISICAL_PROJECT_ID" --method=universal-auth --client-id="$INFISICAL_CLIENT_ID" --client-secret="$INFISICAL_CLIENT_SECRET"' >> /usr/local/bin/manage-swarm.sh && \
-    chmod +x /usr/local/bin/manage-swarm.sh
+  echo 'echo "Running manage-swarm.sh script..."' >> /usr/local/bin/manage-swarm.sh && \
+  echo '[ -z "$INFISICAL_CLIENT_ID" ] && { echo "INFISICAL_CLIENT_ID is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+  echo '[ -z "$INFISICAL_CLIENT_SECRET" ] && { echo "INFISICAL_CLIENT_SECRET is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+  echo '[ -z "$INFISICAL_PROJECT_ID" ] && { echo "INFISICAL_PROJECT_ID is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+  echo 'INFISICAL_TOKEN=$(curl -s -X POST "https://api.infisical.com/auth/login" -d "clientId=$INFISICAL_CLIENT_ID&clientSecret=$INFISICAL_CLIENT_SECRET" | jq -r .token)' >> /usr/local/bin/manage-swarm.sh && \
+  echo '[ -z "$INFISICAL_TOKEN" ] && { echo "Infisical login failed"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+  echo 'MANAGER_TOKEN=$(docker swarm join-token -q manager)' >> /usr/local/bin/manage-swarm.sh && \
+  echo '[ -z "$MANAGER_TOKEN" ] && { echo "Failed to retrieve Docker Swarm manager join token."; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+  echo 'curl -s -X POST "https://api.infisical.com/secrets/set" -H "Authorization: Bearer $INFISICAL_TOKEN" -d "projectId=$INFISICAL_PROJECT_ID&key=DOCKER_SWARM_MANAGER_TOKEN&value=$MANAGER_TOKEN"' >> /usr/local/bin/manage-swarm.sh && \
+  echo 'CA_FINGERPRINT=$(docker info --format "{{.Swarm.Cluster.TLSInfo.TrustRoot}}" | openssl x509 -noout -fingerprint -sha256 | sed "s/.*=//")' >> /usr/local/bin/manage-swarm.sh && \
+  echo '[ -z "$CA_FINGERPRINT" ] && { echo "Failed to retrieve Docker Swarm CA Fingerprint."; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+  echo 'curl -s -X POST "https://api.infisical.com/secrets/set" -H "Authorization: Bearer $INFISICAL_TOKEN" -d "projectId=$INFISICAL_PROJECT_ID&key=DOCKER_SWARM_CA_FINGERPRINT&value=$CA_FINGERPRINT"' >> /usr/local/bin/manage-swarm.sh && \
+  chmod +x /usr/local/bin/manage-swarm.sh
 
 # Entry point
 ENTRYPOINT ["/usr/local/bin/manage-swarm.sh"]
