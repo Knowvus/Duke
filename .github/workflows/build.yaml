@@ -94,62 +94,62 @@ jobs:
             mkdir -p /root/deployment_directory
             curl -o /root/deployment_directory/docker-compose.yaml https://raw.githubusercontent.com/Knowvus/duke/main/docker-compose.yaml
             curl -o /root/deployment_directory/Dockerfile https://raw.githubusercontent.com/Knowvus/duke/main/Dockerfile
-            # Export secrets as environment variables
-            export INFISICAL_CLIENT_ID="${INFISICAL_CLIENT_ID}"
-            export INFISICAL_CLIENT_SECRET="${INFISICAL_CLIENT_SECRET}"
-            export INFISICAL_PROJECT_ID="${INFISICAL_PROJECT_ID}"
+
+            # Create a temporary .env file with the secrets
+            echo "INFISICAL_CLIENT_ID=${INFISICAL_CLIENT_ID}" > /root/deployment_directory/.env
+            echo "INFISICAL_CLIENT_SECRET=${INFISICAL_CLIENT_SECRET}" >> /root/deployment_directory/.env
+            echo "INFISICAL_PROJECT_ID=${INFISICAL_PROJECT_ID}" >> /root/deployment_directory/.env
 
             # Navigate to the deployment directory
             cd /root/deployment_directory
 
             # Build and run Docker Compose with the environment variables set
-            docker-compose up -d
+            docker-compose --env-file .env up -d
           port: 22
           timeout: 5s
           command_timeout: 15s
-          
+
       - name: SSH and Deploy on Droplet
         env:
-          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           SERVICE_NAME: ${{ github.event.inputs.service_name || 'duke' }}
           DO_DUKE_IP: ${{ secrets.DO_DUKE_IP }}
         uses: appleboy/ssh-action@v0.1.3
         with:
-            host: ${{ secrets.DO_DUKE_IP }}
-            username: root
-            password: ${{ secrets.DUKE_ROOT_PASSWORD }}
-            script: |
-              # Install Docker Compose if not installed
-              if ! command -v docker-compose &> /dev/null; then
-                echo "Installing Docker Compose..."
-                sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-                sudo chmod +x /usr/local/bin/docker-compose
-              fi
-              docker-compose version
-          
-              # Navigate to the directory containing docker-compose.yaml
-              cd /root/deployment_directory
-          
-              # Initialize Docker Swarm
-              if ! docker info | grep -q 'Swarm: active'; then
-                echo "Initializing Docker Swarm..."
-                docker swarm init --advertise-addr $DO_DUKE_IP
-              else
-                echo "Docker Swarm already initialized."
-              fi
-          
-              # Verify presence of Dockerfile and docker-compose.yaml
-              if [ ! -f Dockerfile ]; then
-                echo "Dockerfile not found! Exiting."
-                exit 1
-              fi
-          
-              if [ ! -f docker-compose.yaml ]; then
-                echo "docker-compose.yaml not found! Exiting."
-                exit 1
-              fi
-          
-              # Deploy using Docker Compose
-              echo "Deploying with Docker Compose..."
-              docker-compose --env-file .env -f docker-compose.yaml pull
-              docker-compose --env-file .env -f docker-compose.yaml up -d        
+          host: ${{ secrets.DO_DUKE_IP }}
+          username: root
+          password: ${{ secrets.DUKE_ROOT_PASSWORD }}
+          script: |
+            # Install Docker Compose if not installed
+            if ! command -v docker-compose &> /dev/null; then
+              echo "Installing Docker Compose..."
+              sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
+            docker-compose version
+
+            # Navigate to the directory containing docker-compose.yaml
+            cd /root/deployment_directory
+
+            # Initialize Docker Swarm
+            if ! docker info | grep -q 'Swarm: active'; then
+              echo "Initializing Docker Swarm..."
+              docker swarm init --advertise-addr $DO_DUKE_IP
+            else
+              echo "Docker Swarm already initialized."
+            fi
+
+            # Verify presence of Dockerfile and docker-compose.yaml
+            if [ ! -f Dockerfile ]; then
+              echo "Dockerfile not found! Exiting."
+              exit 1
+            fi
+
+            if [ ! -f docker-compose.yaml ]; then
+              echo "docker-compose.yaml not found! Exiting."
+              exit 1
+            fi
+
+            # Deploy using Docker Compose
+            echo "Deploying with Docker Compose..."
+            docker-compose --env-file .env -f docker-compose.yaml pull
+            docker-compose --env-file .env -f docker-compose.yaml up -d

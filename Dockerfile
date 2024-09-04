@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y \
     curl gnupg apt-transport-https \
     && curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | bash \
     && apt-get update && apt-get install -y infisical \
+    jq \
     && rm -rf /var/lib/apt/lists/*
 
 # Clean up any existing files or directories with the same name
