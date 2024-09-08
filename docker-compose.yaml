@@ -1,15 +1,15 @@
 version: '3.8'
 
 services:
-  generic-service:
+  duke:
     image: makaminski1337/duke:latest
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      INFISICAL_CLIENT_ID: ${INFISICAL_CLIENT_ID}
-      INFISICAL_CLIENT_SECRET: ${INFISICAL_CLIENT_SECRET}
-      INFISICAL_PROJECT_ID: ${INFISICAL_PROJECT_ID}
+      INFISICAL_CLIENT_ID: "${INFISICAL_CLIENT_ID}"
+      INFISICAL_SECRET: "${INFISICAL_SECRET}"
+      INFISICAL_PROJECT_ID: "${INFISICAL_PROJECT_ID}"
       SERVICE_EXECUTABLE: duke
     ports:
       - "8080:8080"

@@ -1,5 +1,5 @@
 # First Stage: Build the Rust application (generic)
-FROM rust:1.78 as builder
+FROM rust:1.78 AS builder
 WORKDIR /usr/src/app
 
 # Copy the Cargo.toml and Cargo.lock files to build dependencies first
@@ -40,14 +40,14 @@ COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/duke
 RUN echo '#!/bin/bash' > /usr/local/bin/manage-swarm.sh && \
     echo 'echo "Running manage-swarm.sh script..."' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo "INFISICAL_CLIENT_ID: $INFISICAL_CLIENT_ID"' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'echo "INFISICAL_CLIENT_SECRET: $INFISICAL_CLIENT_SECRET"' >> /usr/local/bin/manage-swarm.sh && \
+    echo 'echo "INFISICAL_SECRET: $INFISICAL_SECRET"' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo "INFISICAL_PROJECT_ID: $INFISICAL_PROJECT_ID"' >> /usr/local/bin/manage-swarm.sh && \
     echo '[ -z "$INFISICAL_CLIENT_ID" ] && { echo "INFISICAL_CLIENT_ID is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
-    echo '[ -z "$INFISICAL_CLIENT_SECRET" ] && { echo "INFISICAL_CLIENT_SECRET is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+    echo '[ -z "$INFISICAL_SECRET" ] && { echo "INFISICAL_SECRET is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
     echo '[ -z "$INFISICAL_PROJECT_ID" ] && { echo "INFISICAL_PROJECT_ID is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo "Attempting Infisical login..."' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'curl -s -X POST "https://api.infisical.com/auth/login" -d "clientId=$INFISICAL_CLIENT_ID&clientSecret=$INFISICAL_CLIENT_SECRET"' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'LOGIN_RESPONSE=$(curl -s -X POST "https://api.infisical.com/auth/login" -d "clientId=$INFISICAL_CLIENT_ID&clientSecret=$INFISICAL_CLIENT_SECRET")' >> /usr/local/bin/manage-swarm.sh && \
+    echo 'curl -s -X POST "https://api.infisical.com/auth/login" -d "clientId=$INFISICAL_CLIENT_ID&clientSecret=$INFISICAL_SECRET"' >> /usr/local/bin/manage-swarm.sh && \
+    echo 'LOGIN_RESPONSE=$(curl -s -X POST "https://api.infisical.com/auth/login" -d "clientId=$INFISICAL_CLIENT_ID&clientSecret=$INFISICAL_SECRET")' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo "Login response: $LOGIN_RESPONSE"' >> /usr/local/bin/manage-swarm.sh && \
     echo 'INFISICAL_TOKEN=$(echo $LOGIN_RESPONSE | jq -r .token)' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo "INFISICAL_TOKEN: $INFISICAL_TOKEN"' >> /usr/local/bin/manage-swarm.sh && \
