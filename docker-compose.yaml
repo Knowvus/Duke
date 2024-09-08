@@ -7,7 +7,10 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - SERVICE_EXECUTABLE=duke
+      INFISICAL_CLIENT_ID: ${INFISICAL_CLIENT_ID}
+      INFISICAL_CLIENT_SECRET: ${INFISICAL_CLIENT_SECRET}
+      INFISICAL_PROJECT_ID: ${INFISICAL_PROJECT_ID}
+      SERVICE_EXECUTABLE: duke
     ports:
       - "8080:8080"
     deploy:

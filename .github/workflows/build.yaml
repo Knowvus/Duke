@@ -66,21 +66,7 @@ jobs:
         with:
           token: ${{ secrets.DIGITAL_OCEAN_TOKEN }}
 
-      - name: SSH into Droplet and Remove Existing docker-compose.yaml
-        uses: appleboy/ssh-action@v0.1.3
-        with:
-          host: ${{ secrets.DO_DUKE_IP }}
-          username: root
-          password: ${{ secrets.DUKE_ROOT_PASSWORD }}
-          script: |
-            # Remove existing docker-compose.yaml if it exists
-            echo "Checking for existing docker-compose.yaml..."
-            if [ -f /root/deployment_directory/docker-compose.yaml ]; then
-              echo "Removing existing docker-compose.yaml..."
-              rm /root/deployment_directory/docker-compose.yaml
-            fi
-
-      - name: Fetch Docker Compose file via curl
+      - name: SSH into Droplet and Deploy
         env:
           INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
           INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_SECRET }}
@@ -94,17 +80,28 @@ jobs:
             mkdir -p /root/deployment_directory
             curl -o /root/deployment_directory/docker-compose.yaml https://raw.githubusercontent.com/Knowvus/duke/main/docker-compose.yaml
             curl -o /root/deployment_directory/Dockerfile https://raw.githubusercontent.com/Knowvus/duke/main/Dockerfile
-
-            # Create a temporary .env file with the secrets
-            echo "INFISICAL_CLIENT_ID=${INFISICAL_CLIENT_ID}" > /root/deployment_directory/.env
-            echo "INFISICAL_CLIENT_SECRET=${INFISICAL_CLIENT_SECRET}" >> /root/deployment_directory/.env
-            echo "INFISICAL_PROJECT_ID=${INFISICAL_PROJECT_ID}" >> /root/deployment_directory/.env
-
+        
             # Navigate to the deployment directory
             cd /root/deployment_directory
 
+            # Create a temporary .env file with the secrets dynamically
+            echo "INFISICAL_CLIENT_ID=${INFISICAL_CLIENT_ID}" > .env
+            echo "INFISICAL_CLIENT_SECRET=${INFISICAL_CLIENT_SECRET}" >> .env
+            echo "INFISICAL_PROJECT_ID=${INFISICAL_PROJECT_ID}" >> .env
+
+            # Load environment variables from the .env file dynamically
+            set -a
+            source .env
+            set +a
+
+            # Print the environment variables to verify they're set correctly
+            echo "Environment variables:"
+            echo "INFISICAL_CLIENT_ID: $INFISICAL_CLIENT_ID"
+            echo "INFISICAL_CLIENT_SECRET: $INFISICAL_CLIENT_SECRET"
+            echo "INFISICAL_PROJECT_ID: $INFISICAL_PROJECT_ID"
+          
             # Build and run Docker Compose with the environment variables set
-            docker-compose --env-file .env up -d
+            docker-compose up -d --build
           port: 22
           timeout: 5s
           command_timeout: 15s
