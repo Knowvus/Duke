@@ -45,13 +45,13 @@ RUN echo '#!/bin/bash' > /usr/local/bin/manage-swarm.sh && \
     echo '[ -z "$INFISICAL_CLIENT_ID" ] && { echo "INFISICAL_CLIENT_ID is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
     echo '[ -z "$INFISICAL_SECRET" ] && { echo "INFISICAL_SECRET is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
     echo '[ -z "$INFISICAL_PROJECT_ID" ] && { echo "INFISICAL_PROJECT_ID is not set"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'echo "Attempting Infisical login..."' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'curl -s -X POST "https://api.infisical.com/auth/login" -d "clientId=$INFISICAL_CLIENT_ID&clientSecret=$INFISICAL_SECRET"' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'LOGIN_RESPONSE=$(curl -s -X POST "https://api.infisical.com/auth/login" -d "clientId=$INFISICAL_CLIENT_ID&clientSecret=$INFISICAL_SECRET")' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'echo "Login response: $LOGIN_RESPONSE"' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'INFISICAL_TOKEN=$(echo $LOGIN_RESPONSE | jq -r .token)' >> /usr/local/bin/manage-swarm.sh && \
+    echo 'echo "Attempting Infisical universal-auth login..."' >> /usr/local/bin/manage-swarm.sh && \
+    echo 'INFISICAL_TOKEN=$(infisical login --method universal-auth --client-id "$INFISICAL_CLIENT_ID" --client-secret "$INFISICAL_SECRET")' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo "INFISICAL_TOKEN: $INFISICAL_TOKEN"' >> /usr/local/bin/manage-swarm.sh && \
-    echo '[ -z "$INFISICAL_TOKEN" ] && { echo "Infisical login failed"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+    echo '[ -z "$INFISICAL_TOKEN" ] && { echo "Infisical login failed: token is empty"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
+    echo 'echo ">>>> Successfully authenticated with universal auth!"' >> /usr/local/bin/manage-swarm.sh && \
+    echo 'echo "Access Token: $INFISICAL_TOKEN"' >> /usr/local/bin/manage-swarm.sh && \
+    echo '# Add your additional commands here' >> /usr/local/bin/manage-swarm.sh && \
     chmod +x /usr/local/bin/manage-swarm.sh
 
 # Expose the port the application will run on

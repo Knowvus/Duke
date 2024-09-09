@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  duke:
+  service:
     image: makaminski1337/duke:latest
     build:
       context: .
