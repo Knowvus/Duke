@@ -1,9 +1,6 @@
 services:
   service:
     image: makaminski1337/duke:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
     environment:
       INFISICAL_CLIENT_ID: "${INFISICAL_CLIENT_ID}"
       INFISICAL_SECRET: "${INFISICAL_SECRET}"
