@@ -90,6 +90,9 @@ jobs:
             echo "INFISICAL_SECRET=${INFISICAL_SECRET}" >> .env
             echo "INFISICAL_PROJECT_ID=${INFISICAL_PROJECT_ID}" >> .env
 
+            # Verify .env file
+            cat .env
+
             # Deploy using Docker Compose
             docker-compose --env-file .env -f docker-compose.yaml pull
             docker-compose --env-file .env -f docker-compose.yaml up -d
