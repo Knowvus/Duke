@@ -8,6 +8,8 @@ services:
       SERVICE_EXECUTABLE: duke
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     deploy:
       replicas: 1
       restart_policy:
