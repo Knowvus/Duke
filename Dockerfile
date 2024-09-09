@@ -52,6 +52,8 @@ RUN echo '#!/bin/bash' > /usr/local/bin/manage-swarm.sh && \
     echo 'echo ">>>> Successfully authenticated with universal auth!"' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo "Access Token: $INFISICAL_TOKEN"' >> /usr/local/bin/manage-swarm.sh && \
     echo '# Add your additional commands here' >> /usr/local/bin/manage-swarm.sh && \
+    echo 'echo "Starting Duke application..."' >> /usr/local/bin/manage-swarm.sh && \
+    echo '/usr/local/bin/duke' >> /usr/local/bin/manage-swarm.sh && \
     chmod +x /usr/local/bin/manage-swarm.sh
 
 # Expose the port the application will run on

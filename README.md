@@ -7,9 +7,9 @@ Duke is a middleware microservice Server that facilitates communication between:
 
 # GOAL
 
-Save Token to infisical
-Sync to Github Secrets
-Kerrigan yaml to recall secret to join swarm as member
+1) Dynamic Infisical Injection
+2) Confirm CICD Deployment
+3) Kerrigan Deployment
 
 # Table of Contents
 
