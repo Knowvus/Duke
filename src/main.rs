@@ -1,4 +1,4 @@
-mod routes;
+pub mod routes;
 mod handlers;
 mod db;
 

@@ -7,9 +7,10 @@ Duke is a middleware microservice Server that facilitates communication between:
 
 # GOAL
 
-1) Dynamic Infisical Injection
-2) Confirm CICD Deployment
-3) Kerrigan Deployment
+1) Refactor to Actions Github repo
+2) Kerrigan Deployment
+3) Duke Communicate with Kerrigan
+4) Raynor Deployment
 
 # Table of Contents
 
