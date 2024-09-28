@@ -29,8 +29,8 @@ jobs:
           docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           digital_ocean_token: ${{ secrets.DIGITAL_OCEAN_TOKEN }}
-          manager_ip: ${{ secrets.MANAGER_IP }}
-          manager_root_password: ${{ secrets.MANAGER_ROOT_PASSWORD }}
+          manager_ip: ${{ secrets.DO_DUKE_IP }}
+          manager_root_password: ${{ secrets.DUKE_ROOT_PASSWORD }}
           infisical_client_id: ${{ secrets.INFISICAL_CLIENT_ID }}
           infisical_secrets: ${{ secrets.INFISICAL_SECRETS }}
           infisical_project_id: ${{ secrets.INFISICAL_PROJECT_ID }}
