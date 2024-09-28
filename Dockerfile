@@ -31,10 +31,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Clean up any existing files or directories with the same name
-RUN rm -rf /usr/local/bin/duke
+RUN rm -rf /usr/local/bin/${{ inputs.service_name }}
 
 # Copy the built binary from the builder stage
-COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/duke
+COPY --from=builder /usr/src/app/target/release/${{ inputs.service_name }} /usr/local/bin/${{ inputs.service_name }}/
 
 # Create a comprehensive manage-swarm.sh script
 RUN echo '#!/bin/bash' > /usr/local/bin/manage-swarm.sh && \
@@ -51,9 +51,8 @@ RUN echo '#!/bin/bash' > /usr/local/bin/manage-swarm.sh && \
     echo '[ -z "$INFISICAL_TOKEN" ] && { echo "Infisical login failed: token is empty"; exit 1; }' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo ">>>> Successfully authenticated with universal auth!"' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo "Access Token: $INFISICAL_TOKEN"' >> /usr/local/bin/manage-swarm.sh && \
-    echo '# Add your additional commands here' >> /usr/local/bin/manage-swarm.sh && \
-    echo 'echo "Starting Duke application..."' >> /usr/local/bin/manage-swarm.sh && \
-    echo '/usr/local/bin/duke' >> /usr/local/bin/manage-swarm.sh && \
+    echo 'echo "Starting application..."' >> /usr/local/bin/manage-swarm.sh && \
+    echo "/usr/local/bin/${{ inputs.service_name }}" >> /usr/local/bin/manage-swarm.sh && \
     chmod +x /usr/local/bin/manage-swarm.sh
 
 # Expose the port the application will run on

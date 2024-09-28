@@ -2,10 +2,10 @@ services:
   service:
     image: makaminski1337/duke:latest
     environment:
-      INFISICAL_CLIENT_ID: "${INFISICAL_CLIENT_ID}"
-      INFISICAL_SECRET: "${INFISICAL_SECRET}"
-      INFISICAL_PROJECT_ID: "${INFISICAL_PROJECT_ID}"
-      SERVICE_EXECUTABLE: duke
+      INFISICAL_CLIENT_ID: "${infisical_client_id}"
+      INFISICAL_SECRET: "${infisical_secrets}"
+      INFISICAL_PROJECT_ID: "${infisical_project_id}"
+      SERVICE_EXECUTABLE: "${service_name}"
     ports:
       - "8080:8080"
     env_file:

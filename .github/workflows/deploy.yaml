@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy Service as Docker Swarm Member
+      - name: Deploy Service as Docker Swarm Manager
         uses: Knowvus/.github/actions/deploy-service/manager@main
         with:
           service_name: duke
