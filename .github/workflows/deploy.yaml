@@ -23,7 +23,7 @@ jobs:
     needs: build  # Ensure the deploy job waits for the build to finish
     steps:
       - name: Deploy Service as Docker Swarm Member
-        uses: Knowvus/.github/actions/deploy-service/member@main  # Call the deploy script from external repo
+        uses: Knowvus/.github/actions/deploy-service/manager@main  # Call the deploy script from external repo
         with:
           docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
