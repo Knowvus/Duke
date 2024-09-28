@@ -17,6 +17,9 @@ RUN touch src/main.rs && cargo build --release
 FROM ubuntu:22.04
 WORKDIR /usr/local/bin
 
+# Declare the build argument to accept service_name
+ARG service_name
+
 # Install necessary packages and Infisical CLI
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -31,10 +34,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Clean up any existing files or directories with the same name
-RUN rm -rf /usr/local/bin/${{ inputs.service_name }}
+RUN rm -rf /usr/local/bin/${service_name}
 
 # Copy the built binary from the builder stage
-COPY --from=builder /usr/src/app/target/release/${{ inputs.service_name }} /usr/local/bin/${{ inputs.service_name }}/
+COPY --from=builder /usr/src/app/target/release/${service_name} /usr/local/bin/${service_name}
 
 # Create a comprehensive manage-swarm.sh script
 RUN echo '#!/bin/bash' > /usr/local/bin/manage-swarm.sh && \
@@ -52,7 +55,7 @@ RUN echo '#!/bin/bash' > /usr/local/bin/manage-swarm.sh && \
     echo 'echo ">>>> Successfully authenticated with universal auth!"' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo "Access Token: $INFISICAL_TOKEN"' >> /usr/local/bin/manage-swarm.sh && \
     echo 'echo "Starting application..."' >> /usr/local/bin/manage-swarm.sh && \
-    echo "/usr/local/bin/${{ inputs.service_name }}" >> /usr/local/bin/manage-swarm.sh && \
+    echo "/usr/local/bin/${service_name}" >> /usr/local/bin/manage-swarm.sh && \
     chmod +x /usr/local/bin/manage-swarm.sh
 
 # Expose the port the application will run on
