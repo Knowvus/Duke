@@ -5,7 +5,7 @@ services:
       INFISICAL_CLIENT_ID: "${infisical_client_id}"
       INFISICAL_SECRET: "${infisical_secrets}"
       INFISICAL_PROJECT_ID: "${infisical_project_id}"
-      SERVICE_EXECUTABLE: "${service_name}"
+      service_name: "${service_name}"
     ports:
       - "8080:8080"
     env_file:
