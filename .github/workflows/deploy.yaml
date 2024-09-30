@@ -32,5 +32,5 @@ jobs:
           manager_ip: ${{ secrets.DO_DUKE_IP }}
           manager_root_password: ${{ secrets.DUKE_ROOT_PASSWORD }}
           infisical_client_id: ${{ secrets.INFISICAL_CLIENT_ID }}
-          infisical_secrets: ${{ secrets.INFISICAL_SECRETS }}
+          infisical_secrets: ${{ secrets.INFISICAL_SECRET }}
           infisical_project_id: ${{ secrets.INFISICAL_PROJECT_ID }}
