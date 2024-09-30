@@ -1,6 +1,10 @@
 target/
 .git/
 .github/
+.vscode/
+logs/
 Dockerfile
 README.md
 .env
+LICENSE
+SECURITY.md

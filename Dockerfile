@@ -1,5 +1,5 @@
-# First Stage: Build the Rust application (generic)
-FROM rust:1.78 AS builder
+# First Stage: Build the Rust application
+FROM rust:1.78 as builder
 WORKDIR /usr/src/app
 
 # Copy the Cargo.toml and Cargo.lock files to build dependencies first
@@ -11,27 +11,26 @@ RUN cargo build --release
 
 # Copy the actual source code and build the project
 COPY src ./src
-RUN touch src/main.rs && cargo build --release
+RUN cargo build --release
 
-# Second Stage: Create a minimal runtime environment
-FROM ubuntu:22.04
+# Second Stage: Create a minimal runtime environment using Alpine
+FROM alpine:3.18
 WORKDIR /usr/local/bin
 
 # Declare the build argument to accept service_name
 ARG service_name
 
-# Install necessary packages and Infisical CLI
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
+# Install necessary runtime dependencies
+RUN apk add --no-cache \
+    libpq \
     ca-certificates \
     curl \
-    gnupg \
-    apt-transport-https \
-    jq \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | bash \
-    && apt-get update && apt-get install -y infisical \
-    && rm -rf /var/lib/apt/lists/*
+    bash \
+    jq
+
+# Install Infisical CLI
+RUN curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.alpine.sh' | bash && \
+    apk add --no-cache infisical-cli
 
 # Clean up any existing files or directories with the same name
 RUN rm -rf /usr/local/bin/${service_name}
